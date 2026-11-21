@@ -65,3 +65,21 @@ export const CATEGORY_LABELS = {
   INVESTMENT: 'Đầu tư',
   OTHER: 'Khác',
 } as const;
+
+/**
+ * Chuyển Date thành chuỗi YYYY-MM-DD
+ * theo múi giờ Việt Nam.
+ */
+export function formatVietnamDateInput(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const get = (type: "year" | "month" | "day") =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}

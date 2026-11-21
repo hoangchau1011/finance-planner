@@ -24,9 +24,47 @@
 - Không tự cài gói npm mới: nêu tên gói, lý do, link npm và chờ người dùng xác nhận.
 - Tóm tắt thay đổi ngắn gọn để sinh viên ghi vào AI_LOG.md.
 
-### Phạm vi đặc biệt của fp1
-- fp1 chỉ gồm schema, migration, seed và dashboard **chỉ đọc trên local**.
-- Chưa có xác thực: `/dashboard` từ chối ở production và khi không bật FP1_LOCAL_PREVIEW.
-- Preview local dùng bản ghi demo và mọi truy vấn đều lọc theo demo userId; không dùng thiết kế này để xử lý dữ liệu người dùng thật.
-- fp2: CRUD + URL filter. fp3: Better Auth 1.7, `requireUser()`, phân quyền toàn diện.
-- Ngoại lệ bắt buộc sau fp3: Route Handler đăng nhập Better Auth phải công khai để người chưa xác thực có thể đăng ký/đăng nhập.
+
+### Tiến độ phát triển Finance Planner
+
+#### fp1 — Nền tảng
+- Prisma ORM 7 + PostgreSQL Neon.
+- Schema, migration và seed dữ liệu mẫu.
+- Dashboard chỉ đọc trên môi trường local.
+- Git tag: `fp1`.
+
+#### fp2 — Quản lý giao dịch
+- CRUD giao dịch bằng Next.js Server Actions.
+- Validation phía server bằng Zod 4.
+- Hiển thị lỗi từng trường và toast Sonner.
+- Lọc theo tháng, loại và danh mục qua URL searchParams.
+- Lọc dữ liệu phía server bằng Prisma.
+- Mọi truy vấn nghiệp vụ phải giới hạn theo userId.
+- Sửa/xóa phải dùng updateMany/deleteMany và kiểm tra count.
+- Có unit test cho validation và bộ lọc.
+- Chỉ cho phép sử dụng bản demo trên localhost.
+- Không triển khai CRUD công khai khi chưa có Better Auth.
+
+#### fp3 — Xác thực và phân quyền
+- Tích hợp Better Auth 1.7 (Email/Password + GitHub).
+- Tạo User, Session, Account, Verification.
+- Thay thế cơ chế demo bằng session thực tế.
+- Bảo vệ toàn bộ trang, Server Actions và API nghiệp vụ bằng requireUser().
+- Route Handler xác thực của Better Auth phải cho phép người chưa đăng nhập truy cập để đăng ký/đăng nhập.
+
+#### v1.0 — Hoàn thiện
+- Wishlist CRUD và thông báo mốc tiết kiệm.
+- Dashboard có biểu đồ shadcn Chart.
+- Ba tính năng mở rộng theo kế hoạch.
+- Unit test, component test và GitHub Actions CI.
+- Hoàn thiện README.md, AI_LOG.md và tài khoản demo.
+
+### Quy tắc Git và AI_LOG
+
+- Sau mỗi đợt phát triển, chạy lint, typecheck, Vitest và build.
+- Ghi chép trung thực quá trình sử dụng AI trong AI_LOG.md.
+- Trước khi commit hoặc push lên GitHub, phải cho người dùng xem nội dung AI_LOG.md dự kiến.
+- Chỉ thực hiện commit, tạo Git tag hoặc push sau khi người dùng xác nhận.
+- Không tự điền thay người dùng phần kiểm chứng cá nhân và Commit/PR.
+- Không tự ý thay đổi lịch sử commit hoặc ngày tạo Git tag.
+- Không bao giờ commit file .env hay thông tin bí mật.
