@@ -1,20 +1,24 @@
 
 import { NextResponse } from "next/server";
 
-import {
-    requireUser,
-    UnauthorizedError,
-} from "@/lib/dal";
-
+import { requireUser, UnauthorizedError } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { parseTransactionFilters } from "@/lib/validation";
 import { transactionWhere } from "@/lib/transaction-queries";
 
+// Luôn xử lý request mới, không cache dữ liệu cá nhân.
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-// GET /api/transactions
+// ==========================================
+// FP3 - GET /api/transactions
+// ==========================================
+
 export async function GET(request: Request) {
-    // Kiểm tra quyền truy cập trước khi đọc dữ liệu
+    // ========================================
+    // 1. XÁC THỰC BETTER AUTH SESSION
+    // ========================================
+
     let user: Awaited<ReturnType<typeof requireUser>>;
 
     try {
@@ -23,6 +27,7 @@ export async function GET(request: Request) {
         if (error instanceof UnauthorizedError) {
             return NextResponse.json(
                 {
+                    success: false,
                     error: "Bạn cần đăng nhập để xem giao dịch.",
                 },
                 {
@@ -30,19 +35,29 @@ export async function GET(request: Request) {
                     headers: {
                         "Cache-Control": "no-store",
                     },
-                },
+                }
             );
         }
 
+        // Không tiết lộ thông tin lỗi hệ thống ra API.
         return NextResponse.json(
             {
+                success: false,
                 error: "Không thể xác minh quyền truy cập.",
             },
-            { status: 500 },
+            {
+                status: 500,
+                headers: {
+                    "Cache-Control": "no-store",
+                },
+            }
         );
     }
 
-    // Đọc bộ lọc từ URL
+    // ========================================
+    // 2. ĐỌC VÀ CHUẨN HÓA BỘ LỌC URL
+    // ========================================
+
     const url = new URL(request.url);
 
     const filters = parseTransactionFilters({
@@ -51,9 +66,14 @@ export async function GET(request: Request) {
         category: url.searchParams.get("category") ?? undefined,
     });
 
+    // ========================================
+    // 3. TRUY VẤN GIAO DỊCH THEO USER ID
+    // ========================================
+
     try {
-        // Chỉ lấy dữ liệu thuộc user hiện tại
         const transactions = await prisma.transaction.findMany({
+            // user.id lấy từ session Better Auth.
+            // Không lấy userId từ URL hoặc request body.
             where: transactionWhere(user.id, filters),
 
             orderBy: [
@@ -72,6 +92,10 @@ export async function GET(request: Request) {
             },
         });
 
+        // ======================================
+        // 4. TRẢ DỮ LIỆU THÀNH CÔNG
+        // ======================================
+
         return NextResponse.json(
             {
                 success: true,
@@ -84,7 +108,7 @@ export async function GET(request: Request) {
                 headers: {
                     "Cache-Control": "private, no-store",
                 },
-            },
+            }
         );
     } catch {
         return NextResponse.json(
@@ -92,7 +116,12 @@ export async function GET(request: Request) {
                 success: false,
                 error: "Không thể tải danh sách giao dịch.",
             },
-            { status: 500 },
+            {
+                status: 500,
+                headers: {
+                    "Cache-Control": "no-store",
+                },
+            }
         );
     }
 }

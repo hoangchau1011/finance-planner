@@ -14,8 +14,10 @@
     "db:seed": "prisma db seed"
   },
   "dependencies": {
+    "@better-auth/prisma-adapter": "1.7.27",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "better-auth": "1.7.27",
     "next": "16.4.6",
     "next-themes": "^0.4.6",
     "pg": "^8.16.0",

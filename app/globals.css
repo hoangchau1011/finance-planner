@@ -36,7 +36,69 @@
   --color-brand-soft: var(--brand-soft);
 }
 
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--background); color: var(--foreground); }
-::selection { background: var(--brand-soft); color: var(--foreground); }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--foreground);
+}
+
+
+/* ==========================================
+   SMOOTH LIGHT / DARK THEME TRANSITION
+   ========================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  body,
+  header,
+  footer,
+  main,
+  button,
+  input,
+  textarea,
+  select,
+  .theme-surface {
+    transition-property:
+      background-color,
+      border-color,
+      color,
+      box-shadow;
+
+    transition-duration: 280ms;
+
+    transition-timing-function: ease-in-out;
+  }
+}
+
+/* ==========================================
+   FP3 - UNIFIED HEADER TRANSITIONS
+   ========================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  .site-header,
+  .site-header a,
+  .site-header button,
+  .site-header span {
+    transition-property:
+      background-color,
+      color,
+      border-color,
+      box-shadow;
+
+    transition-duration: 280ms;
+    transition-timing-function: ease-in-out;
+  }
+}

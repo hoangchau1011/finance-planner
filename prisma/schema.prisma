@@ -7,18 +7,95 @@ datasource db {
   provider = "postgresql"
 }
 
-// fp1 keeps User compatible with Better Auth fields. Auth tables are added in fp3.
+// ==========================================
+// BETTER AUTH - USER
+// ==========================================
+
 model User {
-  id            String         @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  email         String         @unique
-  emailVerified Boolean        @default(false)
+  email         String   @unique
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  transactions  Transaction[]
-  wishlist      WishlistItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Quan hệ Better Auth
+  sessions Session[]
+  accounts Account[]
+
+  // Quan hệ Finance Planner
+  transactions Transaction[]
+  wishlist     WishlistItem[]
 }
+
+// ==========================================
+// BETTER AUTH - SESSION
+// ==========================================
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+// ==========================================
+// BETTER AUTH - ACCOUNT
+// ==========================================
+
+model Account {
+  id         String @id
+  accountId  String
+  providerId String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+// ==========================================
+// BETTER AUTH - VERIFICATION
+// ==========================================
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ==========================================
+// FINANCE PLANNER - ENUMS
+// ==========================================
 
 enum TransactionType {
   INCOME
@@ -42,6 +119,10 @@ enum Priority {
   HIGH
 }
 
+// ==========================================
+// FINANCE PLANNER - TRANSACTIONS
+// ==========================================
+
 model Transaction {
   id          String          @id @default(cuid())
   userId      String
@@ -55,6 +136,10 @@ model Transaction {
 
   @@index([userId, date])
 }
+
+// ==========================================
+// FINANCE PLANNER - WISHLIST
+// ==========================================
 
 model WishlistItem {
   id        String   @id @default(cuid())

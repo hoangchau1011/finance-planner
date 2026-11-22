@@ -45,12 +45,37 @@
 - Chỉ cho phép sử dụng bản demo trên localhost.
 - Không triển khai CRUD công khai khi chưa có Better Auth.
 
+
 #### fp3 — Xác thực và phân quyền
-- Tích hợp Better Auth 1.7 (Email/Password + GitHub).
-- Tạo User, Session, Account, Verification.
-- Thay thế cơ chế demo bằng session thực tế.
-- Bảo vệ toàn bộ trang, Server Actions và API nghiệp vụ bằng requireUser().
-- Route Handler xác thực của Better Auth phải cho phép người chưa đăng nhập truy cập để đăng ký/đăng nhập.
+
+**Đã triển khai:**
+- Tích hợp Better Auth 1.7 với Prisma ORM 7 và PostgreSQL Neon.
+- Bổ sung các bảng Session, Account, Verification; giữ nguyên bảng User và dữ liệu tài chính cũ.
+- Đăng ký và đăng nhập bằng email/mật khẩu.
+- Tạo API xác thực `/api/auth/[...all]`.
+- Thay cơ chế tài khoản demo bằng session Better Auth trong `lib/dal.ts`.
+- Bảo vệ Dashboard và Transactions bằng `requireUser()`.
+- Chuyển người chưa đăng nhập đến `/login`.
+- Kiểm tra quyền trong Server Actions thêm, sửa, xóa giao dịch.
+- API `/api/transactions` từ chối người chưa đăng nhập bằng HTTP 401.
+- Mọi truy vấn giao dịch sử dụng `userId` lấy từ session.
+- Header hỗ trợ đăng nhập, đăng xuất và chuyển giao diện Sáng/Tối.
+- Trang 404 được cập nhật phù hợp với fp3.
+- Bổ sung 12 unit test về phân quyền bằng mock, không thay đổi dữ liệu Neon.
+
+**Kết quả kiểm thử ngày 22/11/2026:**
+- `npm run typecheck`: đạt.
+- `npm run lint`: đạt.
+- `npx vitest run`: 49/49 test đạt trên 8 file.
+- `npm run build`: thành công với Next.js 16.4.6.
+- Đã kiểm tra thủ công việc tách dữ liệu Dashboard theo tài khoản.
+- Đã kiểm tra API từ chối truy cập khi chưa đăng nhập.
+- Đã kiểm tra giao diện 404 mới.
+
+**Còn cần hoàn thiện:**
+- Cấu hình GitHub OAuth và kiểm thử đăng nhập bằng GitHub.
+- Rà soát file tạm, biến môi trường và thông tin bí mật trước commit.
+
 
 #### v1.0 — Hoàn thiện
 - Wishlist CRUD và thông báo mốc tiết kiệm.

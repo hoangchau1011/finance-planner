@@ -1,4 +1,5 @@
 
+import { AuthNav } from "@/components/auth-nav";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Toaster } from "sonner";
@@ -24,11 +25,11 @@ export default function RootLayout({
       <body className="min-h-screen font-sans antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
         >
           {/* HEADER */}
-          <header className="sticky top-0 z-20 border-b border-line bg-card/95 backdrop-blur">
+          <header className="site-header sticky top-0 z-20 border-b border-line bg-card/95 text-foreground backdrop-blur">
             <nav
               aria-label="Điều hướng chính"
               className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8"
@@ -46,20 +47,22 @@ export default function RootLayout({
                 Finance Planner
               </Link>
 
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
                 <Link
                   href="/dashboard"
-                  className="rounded-lg px-2 py-2 font-medium hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+                  className="rounded-xl px-3 py-2 font-medium text-foreground hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   Dashboard
                 </Link>
 
                 <Link
                   href="/transactions"
-                  className="rounded-lg px-2 py-2 font-medium hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+                  className="rounded-xl px-3 py-2 font-medium text-foreground hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   Giao dịch
                 </Link>
+
+                <AuthNav />
 
                 <ThemeToggle />
               </div>
@@ -78,7 +81,7 @@ export default function RootLayout({
 
           {/* FOOTER */}
           <footer className="border-t border-line py-7 text-center text-sm text-muted-foreground">
-            Finance Planner · PHY10615 · fp2 — bản giao dịch local
+            Finance Planner · PHY10615 · fp3 — Better Auth
           </footer>
         </ThemeProvider>
       </body>

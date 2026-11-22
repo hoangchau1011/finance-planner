@@ -1,7 +1,7 @@
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { UnauthorizedError, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +13,7 @@ import { TransactionForm } from "./transaction-form";
 import { TransactionFilters } from "./transaction-filters";
 import { TransactionTable } from "./transaction-table";
 
+// Luôn kiểm tra session và tải dữ liệu mới từ server.
 export const dynamic = "force-dynamic";
 
 type PageProps = {
@@ -24,24 +25,36 @@ type PageProps = {
 export default async function TransactionsPage({
     searchParams,
 }: PageProps) {
-    // Chỉ cho phép truy cập trong chế độ demo local fp2
+    // ==========================================
+    // FP3 - XÁC THỰC NGƯỜI DÙNG
+    // ==========================================
+
     let user: Awaited<ReturnType<typeof requireUser>>;
 
     try {
+        // Chỉ lấy thông tin từ Better Auth session.
         user = await requireUser();
     } catch (error) {
         if (error instanceof UnauthorizedError) {
-            notFound();
+            // Chưa đăng nhập => chuyển sang /login.
+            redirect("/login");
         }
 
+        // Không che giấu lỗi hệ thống khác.
         throw error;
     }
 
-    // Đọc và validate bộ lọc từ URL
+    // ==========================================
+    // ĐỌC VÀ KIỂM TRA BỘ LỌC URL
+    // ==========================================
+
     const params = await searchParams;
     const filters = parseTransactionFilters(params);
 
-    // Lấy giao dịch của đúng người dùng từ Neon
+    // ==========================================
+    // TRUY VẤN GIAO DỊCH CỦA ĐÚNG USER
+    // ==========================================
+
     const transactions = await prisma.transaction.findMany({
         where: transactionWhere(user.id, filters),
 
@@ -60,7 +73,7 @@ export default async function TransactionsPage({
         },
     });
 
-    // Chuyển Date thành chuỗi để truyền cho Client Component
+    // Chuyển Date thành chuỗi để truyền cho Client Component.
     const rows = transactions.map((transaction) => ({
         id: transaction.id,
         type: transaction.type,
@@ -70,13 +83,17 @@ export default async function TransactionsPage({
         date: formatVietnamDateInput(transaction.date),
     }));
 
+    // ==========================================
+    // GIAO DIỆN TRANG GIAO DỊCH
+    // ==========================================
+
     return (
         <main className="mx-auto max-w-6xl space-y-7 px-5 py-10 sm:px-8">
             {/* TIÊU ĐỀ */}
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <p className="text-sm font-semibold text-brand">
-                        Finance Planner · fp2
+                        Finance Planner · fp3
                     </p>
 
                     <h1 className="mt-2 text-3xl font-bold">
@@ -91,7 +108,7 @@ export default async function TransactionsPage({
 
                 <Link
                     href="/dashboard"
-                    className="rounded-xl border border-line px-4 py-2 text-sm font-medium hover:bg-muted"
+                    className="rounded-xl border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
                 >
                     Về Dashboard
                 </Link>

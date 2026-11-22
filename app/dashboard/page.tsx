@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { UnauthorizedError, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -27,19 +27,23 @@ function formatDate(value: Date): string {
 }
 
 export default async function DashboardPage() {
-  // fp2: Chỉ cho phép truy cập tài khoản demo trên localhost.
-  // fp3: Thay thế bằng Better Auth.
+
+  // fp3: Bảo vệ Dashboard bằng Better Auth session.
   let user: Awaited<ReturnType<typeof requireUser>>;
 
   try {
+    // Lấy người dùng từ session đã xác thực.
     user = await requireUser();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      notFound();
+      // Chưa đăng nhập => chuyển đến trang đăng nhập.
+      redirect("/login");
     }
 
+    // Các lỗi khác phải được xử lý như lỗi hệ thống.
     throw error;
   }
+
 
   const userId = user.id;
   const currentMonth = getVietnamMonthRange();
@@ -120,7 +124,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-brand">
-            Finance Planner · fp2
+            Finance Planner · fp3
           </p>
 
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -409,8 +413,8 @@ export default async function DashboardPage() {
 
                   <td
                     className={`py-4 text-right font-semibold tabular-nums ${entry.type === "INCOME"
-                        ? "text-brand"
-                        : "text-foreground"
+                      ? "text-brand"
+                      : "text-foreground"
                       }`}
                   >
                     {entry.type === "INCOME" ? "+" : "−"}
