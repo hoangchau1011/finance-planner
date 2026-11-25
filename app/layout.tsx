@@ -62,6 +62,13 @@ export default function RootLayout({
                   Giao dịch
                 </Link>
 
+                <Link
+                  href="/wishlist"
+                  className="rounded-xl px-3 py-2 font-medium text-foreground transition-colors duration-300 ease-in-out hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+                >
+                  Wishlist
+                </Link>
+
                 <AuthNav />
 
                 <ThemeToggle />

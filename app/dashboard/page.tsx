@@ -95,13 +95,16 @@ export default async function DashboardPage() {
       take: 6,
     }),
 
+
     prisma.wishlistItem.findMany({
       where: { userId },
       orderBy: [
-        { priority: "desc" },
-        { createdAt: "asc" },
+        { createdAt: "desc" },
+        { id: "desc" },
       ],
+      take: 4,
     }),
+
 
     prisma.transaction.count({
       where: { userId },
@@ -124,7 +127,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-brand">
-            Finance Planner · fp3
+            Finance Planner · v1.0
           </p>
 
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -276,23 +279,66 @@ export default async function DashboardPage() {
           aria-labelledby="wishlist-heading"
           className="rounded-2xl border border-line bg-card p-6"
         >
-          <h2
-            id="wishlist-heading"
-            className="text-xl font-bold"
-          >
-            Wishlist
-          </h2>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tiến độ tiết kiệm dựa trên số dư hiện tại
+          {/* V1.0 - WISHLIST HEADER */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2
+                id="wishlist-heading"
+                className="text-xl font-bold text-foreground"
+              >
+                Mục tiêu tài chính
+              </h2>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Các mục tiêu gần đây của bạn
+              </p>
+            </div>
+
+            <Link
+              href="/wishlist"
+              className="rounded-xl border border-line px-3 py-2 text-sm font-semibold text-brand transition-colors hover:bg-muted"
+            >
+              Xem tất cả
+            </Link>
+          </div>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Thanh tỷ lệ bên dưới so sánh số dư hiện tại
+            với chi phí mục tiêu, chỉ mang tính tham khảo.
           </p>
 
+
           <div className="mt-6 space-y-6">
+
+            {/* V1.0 - EMPTY STATE */}
             {wishes.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Chưa có món đồ mong muốn.
-              </p>
+              <div className="rounded-xl border border-dashed border-line bg-muted/30 p-6 text-center">
+                <div
+                  aria-hidden="true"
+                  className="mb-3 text-3xl text-brand"
+                >
+                  ☆
+                </div>
+
+                <h3 className="font-semibold text-foreground">
+                  Chưa có mục tiêu tài chính
+                </h3>
+
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Hãy tạo mục tiêu đầu tiên để bắt đầu
+                  lập kế hoạch tiết kiệm.
+                </p>
+
+                <Link
+                  href="/wishlist"
+                  className="mt-4 inline-flex rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  + Thêm mục tiêu
+                </Link>
+              </div>
             )}
+
 
             {wishes.map((item) => {
               const progress = wishlistProgress(
@@ -438,10 +484,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <p className="mt-6 text-sm text-muted-foreground">
-        Bản demo fp2 chỉ hoạt động trên localhost.
-        Xác thực Better Auth sẽ được bổ sung trong fp3.
-      </p>
+
     </main>
   );
 }

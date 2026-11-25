@@ -77,12 +77,117 @@
 - Rà soát file tạm, biến môi trường và thông tin bí mật trước commit.
 
 
-#### v1.0 — Hoàn thiện
-- Wishlist CRUD và thông báo mốc tiết kiệm.
-- Dashboard có biểu đồ shadcn Chart.
-- Ba tính năng mở rộng theo kế hoạch.
-- Unit test, component test và GitHub Actions CI.
-- Hoàn thiện README.md, AI_LOG.md và tài khoản demo.
+
+## Finance Planner v1.0 — Wishlist CRUD
+
+### Features
+
+- Manage personal financial goals (Wishlist).
+- Create, update, and delete wishlist items.
+- Validate input with Zod 4.
+- Display wishlist items with priority levels.
+- Show wishlist statistics and recent goals.
+- Integrate Wishlist navigation into the Header.
+- Support responsive layouts and light/dark themes.
+- Display success and error messages using Sonner.
+
+### Wishlist data model
+
+Uses the existing Prisma model `WishlistItem`.
+
+Main fields:
+- `id`: Unique wishlist item identifier.
+- `userId`: Owner of the wishlist item.
+- `name`: Financial goal name.
+- `cost`: Target amount in VND.
+- `priority`: LOW, MEDIUM, or HIGH.
+
+Do not modify the Prisma schema unless a new feature
+explicitly requires a database change.
+
+### Wishlist architecture
+
+- `lib/wishlist-validation.ts`
+  Zod validation and form types.
+
+- `app/wishlist/actions.ts`
+  Authenticated CRUD Server Actions.
+
+- `app/wishlist/wishlist-form.tsx`
+  Create and edit form using React useActionState.
+
+- `app/wishlist/wishlist-table.tsx`
+  Wishlist list, inline editing, and delete confirmation.
+
+- `app/wishlist/page.tsx`
+  Protected page with user-specific data.
+
+- `__tests__/wishlist.test.ts`
+  Validation, CRUD, and authorization unit tests.
+
+### Authentication and authorization
+
+- Use Better Auth for authentication.
+- Obtain the current user through `requireUser()`.
+- Never trust a `userId` submitted by the browser.
+- Filter user-owned database operations by `userId`.
+- Use `updateMany()` and `deleteMany()` with both
+  the item ID and authenticated user ID.
+- Do not expose data belonging to another user.
+
+### Dashboard integration
+
+- Dashboard displays up to 4 recent wishlist items.
+- The full list is available at `/wishlist`.
+- Dashboard and Wishlist must refresh after mutations.
+- Existing progress indicators compare the current
+  account balance with the target cost.
+- Do not describe this as money actually saved for
+  an individual goal.
+
+### Validation rules
+
+- Goal name: required, maximum 100 characters.
+- Target amount: positive integer in VND.
+- Maximum target amount: 2,147,483,647 VND.
+- Priority: LOW, MEDIUM, HIGH.
+- Validate all mutations on the server.
+
+### Quality checks
+
+Run before committing changes:
+
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npx vitest run`
+4. `npm run build`
+
+Wishlist unit tests use mocks and must not modify
+production data in Neon PostgreSQL.
+
+### Git and AI documentation
+
+- Keep `AI_LOG.md` updated for each release.
+- Record AI assistance, manual work, errors, and fixes.
+- Present AI_LOG changes to the user for review.
+- Obtain explicit user approval before committing
+  or pushing to GitHub.
+- Never commit `.env`, passwords, OAuth secrets,
+  or temporary credential-management scripts.
+
+### Kế hoạch phát triển tiếp theo
+
+Các nội dung chưa hoàn thành trong giai đoạn Wishlist CRUD:
+
+- Bổ sung thông báo khi đạt mốc tiết kiệm.
+- Xây dựng biểu đồ tài chính bằng shadcn Chart.
+- Triển khai ba tính năng mở rộng theo kế hoạch môn học.
+- Bổ sung component tests và kiểm thử tích hợp.
+- Thiết lập GitHub Actions CI.
+- Rà soát và hoàn thiện README.md.
+
+Chỉ đánh dấu các chức năng trên là hoàn thành
+sau khi đã triển khai và kiểm thử thực tế.
 
 ### Quy tắc Git và AI_LOG
 

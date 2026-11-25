@@ -68,3 +68,84 @@
 **Một lần AI sai và cách mình phát hiện:** Trong mã Prisma schema do AI hướng dẫn, khai báo `@relation` tại `Session` và `Account` có cú pháp không hợp lệ, khiến `npx prisma format` báo lỗi **P1012**. Tôi đối chiếu dòng lỗi, gửi lại thông báo và sửa khai báo theo hướng dẫn. Sau đó `prisma validate`, `prisma generate`, migration và typecheck đều thành công. Các lỗi `Invalid origin` và hydration trong quá trình phát triển cũng giúp tôi nhận thấy cần xác định lỗi bằng Terminal, trình duyệt và kiểm thử thực tế, không chỉ tin vào giải pháp AI đề xuất.
 
 **Kết luận tự đánh giá:** AI tham gia đáng kể vào việc đề xuất cấu trúc, mã nguồn, phân tích lỗi và bài kiểm thử. Tôi trực tiếp thao tác, cấu hình dịch vụ, kiểm chứng kết quả và chịu trách nhiệm về sản phẩm. Phiên bản fp3 đã kiểm thử kỹ thuật và các luồng xác thực chính; tại thời điểm viết nhật ký, **chưa commit, chưa tạo tag `fp3` và chưa push GitHub**.
+
+---
+
+## v1.0 — Xây dựng chức năng Wishlist CRUD
+
+### 1. Nhật ký sử dụng AI
+
+| Ngày | Công cụ AI | Công việc | Nội dung yêu cầu | AI hỗ trợ | Việc tôi thực hiện | Kết quả | Trạng thái |
+|---|---|---|---|---|---|---|---|
+| 2026-11-24 | ChatGPT | Lập kế hoạch phát triển v1.0 | Hướng dẫn nâng cấp Finance Planner từ fp3 lên v1.0, ưu tiên chức năng Wishlist CRUD và chia nhỏ theo từng file. | Đề xuất cấu trúc file, trình tự triển khai và các bước kiểm tra. | Tôi thực hiện lần lượt từng file, giữ nguyên những chức năng đã hoàn thành ở fp3. | Xác định phạm vi triển khai Wishlist CRUD và kế hoạch kiểm thử. | Hoàn thành kế hoạch. |
+| 2026-11-24 | ChatGPT | Xây dựng Wishlist Validation | Hướng dẫn tạo `lib/wishlist-validation.ts` bằng Zod 4 để kiểm tra dữ liệu mục tiêu tài chính. | Cung cấp mã nguồn kiểm tra tên, chi phí, mức ưu tiên và ID mục tiêu. | Tôi tạo file, tích hợp mã nguồn, chạy TypeScript và ESLint để kiểm tra. | Hoàn thành kiểm tra dữ liệu đầu vào Wishlist. | Đã kiểm tra. |
+| 2026-11-24 | ChatGPT | Xây dựng Wishlist Server Actions | Hướng dẫn tạo chức năng thêm, sửa, xóa Wishlist và phân quyền bằng Better Auth. | Hỗ trợ xây dựng `app/wishlist/actions.ts`, kiểm tra session và giới hạn truy vấn theo `userId`. | Tôi triển khai mã nguồn, kiểm tra các thao tác Prisma và chạy lệnh kiểm tra dự án. | Hoàn thành các Server Actions cho Wishlist CRUD. | Đã kiểm tra. |
+| 2026-11-24 | ChatGPT | Xây dựng giao diện Wishlist | Hướng dẫn tạo form thêm/sửa, bảng danh sách, xác nhận xóa và trang `/wishlist`. | Cung cấp mã nguồn `wishlist-form.tsx`, `wishlist-table.tsx`, `page.tsx` và hướng dẫn tích hợp Sonner. | Tôi tạo các file, kiểm tra giao diện, thử các chức năng CRUD trên localhost. | Hoàn thành giao diện quản lý Wishlist và kết nối dữ liệu người dùng. | Đã kiểm tra. |
+| 2026-11-24 | ChatGPT | Tích hợp Wishlist vào hệ thống | Hướng dẫn cập nhật Header và Dashboard để truy cập Wishlist và hiển thị các mục tiêu gần nhất. | Đề xuất chỉnh sửa `app/layout.tsx` và `app/dashboard/page.tsx`, bổ sung điều hướng và trạng thái danh sách rỗng. | Tôi chỉnh sửa các thành phần hiện có, kiểm tra điều hướng và chức năng cũ. | Wishlist được tích hợp vào Header và Dashboard. | Đã kiểm tra. |
+| 2026-11-24 | ChatGPT | Thiết lập đăng nhập tài khoản demo | Hướng dẫn sử dụng `demo@phy10615.vn` để kiểm thử dữ liệu mẫu đã seed mà không làm mất dữ liệu. | Giải thích vấn đề tài khoản demo chưa có mật khẩu và cung cấp script tạm thời để thiết lập đăng nhập bằng Better Auth. | Tôi tự chọn mật khẩu, chạy script, đăng nhập và kiểm tra dữ liệu mẫu. | Đăng nhập thành công; xác nhận 45 giao dịch và 4 mục tiêu Wishlist. | Hoàn thành đăng nhập demo. |
+| 2026-11-24 | ChatGPT | Kiểm thử Wishlist CRUD | Hướng dẫn xây dựng bộ kiểm thử bằng Vitest cho validation, thêm, sửa, xóa và phân quyền. | Cung cấp 23 trường hợp kiểm thử trong `__tests__/wishlist.test.ts`, sử dụng mock session và Prisma. | Tôi tạo file kiểm thử, chạy Vitest, TypeScript, ESLint và production build. | Các bước kiểm tra được thực hiện thành công theo kết quả trên máy cá nhân. | Đã kiểm tra. |
+| 2026-11-25 | ChatGPT | Cập nhật tài liệu AGENTS.md | Hướng dẫn cập nhật tài liệu kỹ thuật cho Wishlist CRUD và kiểm tra các file thay đổi trước commit. | Đề xuất nội dung tài liệu và các lệnh `git diff`, `git diff --check`, `git status`. | Tôi cập nhật `AGENTS.md`, kiểm tra Git status và các cảnh báo LF/CRLF. | Không phát hiện lỗi khoảng trắng; các thay đổi v1.0 chưa được commit. | Chưa commit v1.0. |
+| 2026-11-25 | ChatGPT | Cập nhật nhật ký AI_LOG.md | Hướng dẫn tổng hợp nhật ký sử dụng AI và phần tự đánh giá cho phiên bản v1.0 theo cấu trúc tài liệu hiện có. | Soạn nội dung mô tả quá trình thực hiện, công việc AI hỗ trợ, kết quả kiểm thử và các vấn đề đã xử lý. | Tôi rà soát nội dung, yêu cầu bổ sung bảng nhật ký 8 cột để thống nhất với các phiên bản trước. | Bổ sung nhật ký v1.0; chờ duyệt nội dung cuối cùng trước khi commit và push. | Đang hoàn thiện tài liệu. |
+
+**Các nội dung AI hỗ trợ:**
+
+- **Phân tích và lập kế hoạch:** AI hỗ trợ chia chức năng Wishlist CRUD thành từng bước, xác định các file cần tạo mới và các file cần chỉnh sửa.
+- **Kiểm tra dữ liệu:** AI hỗ trợ xây dựng `lib/wishlist-validation.ts` bằng Zod 4 để kiểm tra tên mục tiêu, số tiền và mức độ ưu tiên.
+- **Xử lý nghiệp vụ:** AI hướng dẫn xây dựng `app/wishlist/actions.ts` với các Server Actions để thêm, sửa và xóa mục tiêu tài chính.
+- **Xác thực và phân quyền:** AI hỗ trợ tích hợp Better Auth, lấy `userId` từ session và giới hạn các thao tác trên dữ liệu thuộc tài khoản đang đăng nhập.
+- **Xây dựng giao diện:** AI hỗ trợ tạo `wishlist-form.tsx`, `wishlist-table.tsx` và trang `/wishlist`, kết hợp React 19, Tailwind CSS và Sonner.
+- **Tích hợp Dashboard:** AI hướng dẫn bổ sung liên kết Wishlist trên Header, hiển thị các mục tiêu gần nhất và điều hướng đến trang quản lý.
+
+
+**Quá trình thực hiện:**
+
+Tôi lần lượt tạo và chỉnh sửa các file theo hướng dẫn, kiểm tra TypeScript và ESLint sau từng bước, sau đó kiểm thử các chức năng trên trình duyệt.
+
+Sau khi hoàn thành Wishlist CRUD, tôi chạy kiểm thử Vitest và kiểm tra production build. Các bước kiểm tra được thực hiện thành công theo kết quả trên máy cá nhân.
+
+Trong quá trình kiểm thử, tôi sử dụng tài khoản `demo@phy10615.vn` đã được tạo ở phiên bản trước.
+
+Thiết lập phương thức đăng nhập bằng Better Auth mà không thay đổi dữ liệu đã lưu. Sau khi thực hiện, tôi đăng nhập thành công và xác nhận tài khoản demo có **45 giao dịch và 4 mục tiêu Wishlist**.
+
+### 2. Tự đánh giá cuối bài
+
+**a) Những công việc tôi tự thực hiện**
+
+- Trực tiếp tạo và chỉnh sửa các file mã nguồn trong VS Code.
+- Tổ chức thư mục và tích hợp các thành phần Wishlist vào dự án.
+- Thực hiện các lệnh kiểm tra TypeScript, ESLint, Vitest và production build.
+- Kiểm tra giao diện và các chức năng thêm, sửa, xóa mục tiêu.
+- Đăng nhập tài khoản demo và kiểm tra dữ liệu đã có trong Neon PostgreSQL.
+- Kiểm tra các thay đổi bằng Git và rà soát tài liệu trước khi commit.
+
+**b) Những công việc AI hỗ trợ**
+
+- Phân tích yêu cầu và đề xuất cách chia nhỏ chức năng Wishlist CRUD.
+- Cung cấp mã nguồn tham khảo và hướng dẫn chỉnh sửa từng file.
+- Giải thích cách kết hợp Zod 4, React Hooks, Next.js Server Actions và Prisma.
+- Đề xuất cách phân quyền theo tài khoản để tránh truy cập dữ liệu của người dùng khác.
+- Hỗ trợ xây dựng bộ kiểm thử Vitest.
+
+**c) Lỗi, vấn đề gặp phải và cách khắc phục**
+
+- **Tài khoản demo chưa đăng nhập được:** Tài khoản được tạo từ dữ liệu seed nhưng chưa có phương thức đăng nhập bằng mật khẩu. Tôi thực hiện script thiết lập mật khẩu theo hướng dẫn của AI và đăng nhập thành công.
+- **Nguy cơ truy cập dữ liệu giữa các tài khoản:** Các Server Actions được thiết kế để lấy `userId` từ session Better Auth, đồng thời giới hạn truy vấn sửa và xóa theo cả ID mục tiêu và ID người dùng.
+- **Cảnh báo LF/CRLF trên Windows:** Git xuất hiện cảnh báo chuyển đổi ký tự xuống dòng. Tôi sử dụng `git diff --check` để kiểm tra và không phát hiện lỗi khoảng trắng.
+- **Kiểm thử dữ liệu:** Tôi sử dụng tài khoản demo có sẵn dữ liệu để kiểm tra chức năng mà không cần tạo lại toàn bộ giao dịch và mục tiêu mẫu.
+
+**d) Kết quả và tự đánh giá**
+
+Trong phiên bản v1.0, tôi đã hoàn thành các nội dung:
+
+- Thêm, sửa và xóa mục tiêu tài chính.
+- Kiểm tra dữ liệu đầu vào bằng Zod 4.
+- Hiển thị danh sách Wishlist và mức độ ưu tiên.
+- Tích hợp Wishlist vào Dashboard và thanh điều hướng.
+- Hiển thị thông báo kết quả và xác nhận trước khi xóa.
+- Giới hạn truy cập dữ liệu theo tài khoản đăng nhập.
+- Xây dựng 23 bài kiểm thử mới cho chức năng Wishlist.
+- Kiểm tra TypeScript, ESLint, Vitest và production build.
+
+**Các nội dung chưa triển khai:** Biểu đồ tài chính nâng cao bằng shadcn Chart, các tính năng mở rộng, component test và GitHub Actions CI.
+
+**Tự đánh giá:** AI hỗ trợ tôi trong quá trình phân tích, viết mã nguồn tham khảo và thiết kế kiểm thử. Tôi trực tiếp triển khai, chạy chương trình, kiểm tra kết quả và lựa chọn những thay đổi phù hợp với dự án. Qua quá trình thực hiện, tôi hiểu thêm về Server Actions, kiểm tra dữ liệu bằng Zod, quản lý session và bảo vệ dữ liệu theo người dùng.
