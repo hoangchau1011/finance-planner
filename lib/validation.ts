@@ -107,6 +107,8 @@ export const transactionFilterSchema = z.object({
     range: z.enum(RANGES).default("this-month"),
     type: z.enum(TYPES).optional(),
     category: z.enum(CATEGORIES).optional(),
+    // V1.0 - Tìm kiếm mô tả giao dịch
+    q: z.string().trim().max(120).optional(),
 });
 
 export type TransactionFilters = z.infer<
@@ -115,19 +117,46 @@ export type TransactionFilters = z.infer<
 
 // Kiểm tra và chuẩn hóa bộ lọc trên URL
 export function parseTransactionFilters(
-    search: Record<string, string | string[] | undefined>,
+    search: Record<
+        string,
+        string | string[] | undefined
+    >
 ): TransactionFilters {
-    const range = z.enum(RANGES).safeParse(search.range);
-    const type = z.enum(TYPES).safeParse(search.type);
-    const category = z.enum(CATEGORIES).safeParse(
-        search.category,
+    const range = z.enum(RANGES).safeParse(
+        search.range
     );
 
+    const type = z.enum(TYPES).safeParse(
+        search.type
+    );
+
+    const category = z.enum(CATEGORIES).safeParse(
+        search.category
+    );
+
+    // Không chấp nhận từ khóa rỗng hoặc quá dài.
+    const query = z
+        .string()
+        .trim()
+        .min(1)
+        .max(120)
+        .safeParse(search.q);
+
     return {
-        range: range.success ? range.data : "this-month",
-        ...(type.success ? { type: type.data } : {}),
+        range: range.success
+            ? range.data
+            : "this-month",
+
+        ...(type.success
+            ? { type: type.data }
+            : {}),
+
         ...(category.success
             ? { category: category.data }
+            : {}),
+
+        ...(query.success
+            ? { q: query.data }
             : {}),
     };
 }

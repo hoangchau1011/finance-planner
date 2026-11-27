@@ -27,6 +27,7 @@ model User {
   // Quan hệ Finance Planner
   transactions Transaction[]
   wishlist     WishlistItem[]
+  budgets      MonthlyBudget[]
 }
 
 // ==========================================
@@ -142,13 +143,47 @@ model Transaction {
 // ==========================================
 
 model WishlistItem {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  cost      Int
-  priority  Priority @default(MEDIUM)
-  createdAt DateTime @default(now())
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  cost        Int
+  savedAmount Int      @default(0)
+  priority    Priority @default(MEDIUM)
+  createdAt   DateTime @default(now())
 
   @@index([userId])
+}
+
+// ==========================================
+// FINANCE PLANNER V1.0 - MONTHLY BUDGET
+// ==========================================
+
+model MonthlyBudget {
+  id String @id @default(cuid())
+
+  // Mỗi ngân sách thuộc một tài khoản.
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tháng quản lý theo định dạng YYYY-MM.
+  // Ví dụ: 2026-11
+  month String @db.VarChar(7)
+
+  // Sử dụng Category hiện có.
+  category Category
+
+  // Hạn mức ngân sách, đơn vị VND.
+  limitAmount Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Mỗi user chỉ có một ngân sách
+  // cho mỗi danh mục trong một tháng.
+  @@unique([userId, month, category])
+  // Hỗ trợ truy vấn ngân sách theo tháng.
+  @@index([userId, month])
 }

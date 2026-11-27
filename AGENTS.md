@@ -193,8 +193,104 @@ sau khi đã triển khai và kiểm thử thực tế.
 
 - Sau mỗi đợt phát triển, chạy lint, typecheck, Vitest và build.
 - Ghi chép trung thực quá trình sử dụng AI trong AI_LOG.md.
-- Trước khi commit hoặc push lên GitHub, phải cho người dùng xem nội dung AI_LOG.md dự kiến.
 - Chỉ thực hiện commit, tạo Git tag hoặc push sau khi người dùng xác nhận.
 - Không tự điền thay người dùng phần kiểm chứng cá nhân và Commit/PR.
 - Không tự ý thay đổi lịch sử commit hoặc ngày tạo Git tag.
 - Không bao giờ commit file .env hay thông tin bí mật.
+
+## Quy tắc bổ sung — Finance Planner v1.0
+
+### 1. Danh tính và phiên bản
+
+- Tên dự án phải giữ nguyên là Finance Planner.
+- Tên hiển thị phiên bản hiện tại là v1.0.
+- Không tự đổi thành Finance Future hoặc tên khác.
+- "Mô phỏng tài chính" chỉ là tên một tính năng.
+- Không tự thay đổi các Git tag fp1, fp2, fp3, v1.0.
+
+### 2. Các chức năng hiện có
+
+Dự án bao gồm:
+
+- Better Auth: email/password và GitHub OAuth.
+- Giao dịch: CRUD, Zod, bộ lọc URL, tìm kiếm.
+- Dashboard: tổng thu, tổng chi, số dư, biểu đồ.
+- Wishlist: CRUD, savedAmount, tiến độ tiết kiệm.
+- Ngân sách theo tháng và cảnh báo hạn mức.
+- Báo cáo tài chính bằng Recharts.
+- Xuất CSV theo bộ lọc và userId.
+- Mô phỏng tài chính dựa trên Wishlist.
+- Guest Demo bằng dữ liệu mô phỏng.
+- Responsive, Dark Mode, Header và Footer.
+
+Khi thêm chức năng mới, không làm thay đổi
+hành vi của chức năng đang hoạt động nếu
+không có yêu cầu rõ ràng.
+
+### 3. Mô phỏng tài chính
+
+- Sử dụng hàm thuần trong
+  lib/financial-simulator.ts.
+- Đọc dữ liệu từ server sau khi requireUser().
+- Lọc Wishlist và Transaction theo userId.
+- Phân tích các tháng đã hoàn thành,
+  sử dụng múi giờ Asia/Ho_Chi_Minh.
+- Các giá trị giả định chỉ nằm trong client state.
+- Không tự động thay đổi giao dịch, số dư,
+  ngân sách hoặc savedAmount.
+- Không coi kết quả dự đoán là kết quả bảo đảm.
+- Thay đổi thuật toán phải cập nhật unit test.
+
+### 4. Guest Demo
+
+- Guest Demo phải hoạt động không cần đăng nhập.
+- Không truy cập dữ liệu của tài khoản thật.
+- Không sử dụng tài khoản seed làm nguồn dữ liệu demo.
+- Không gọi Server Action ghi dữ liệu thật.
+- Dữ liệu mô phỏng được tạo độc lập.
+- Người dùng được phép đặt lại dữ liệu mẫu.
+
+### 5. Authentication và quyền truy cập
+
+- Trang chứa dữ liệu cá nhân phải xác thực
+  session phía server.
+- Dữ liệu truy vấn luôn lọc theo userId.
+- Người chưa đăng nhập vào /simulator phải
+  được chuyển tới /login.
+- Không bỏ kiểm tra quyền để sửa lỗi UI.
+- Không che giấu lỗi hệ thống bằng cách
+  xử lý tất cả lỗi như UnauthorizedError.
+
+### 6. Kiểm thử và CI
+
+Trước khi chuẩn bị commit:
+
+- npm run typecheck
+- npm run lint
+- npx vitest run
+- git diff --check
+- npm run build
+
+- Dùng Vitest cho unit và component test.
+- Cấu hình hiện tại nhận file *.test.ts.
+- Component test dùng React Testing Library.
+- CI chạy qua .github/workflows/ci.yml.
+- Không tự coi CI đạt khi chưa có kết quả
+  chạy thực tế trên GitHub.
+
+### 7. Vercel và biến môi trường
+
+- Không commit .env hoặc .env.local.
+- Không công khai BETTER_AUTH_SECRET.
+- Không công khai GitHub Client Secret.
+- DATABASE_URL dùng cho kết nối ứng dụng.
+- DATABASE_URL_UNPOOLED dùng cho Prisma CLI
+  theo prisma.config.ts của dự án.
+- Kiểm tra giá trị môi trường thực tế trước
+  khi triển khai.
+- Không chạy seed trên production khi chưa
+  có sự đồng ý rõ ràng của người dùng.
+- Phải kiểm tra callback GitHub OAuth,
+  session và phân quyền trên production.
+
+```

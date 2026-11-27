@@ -19,6 +19,17 @@ export function transactionWhere(
             ? { category: filters.category }
             : {}),
 
+        // V1.0 - Tìm kiếm mô tả giao dịch.
+        // PostgreSQL so khớp không phân biệt chữ hoa/thường.
+        ...(filters.q
+            ? {
+                description: {
+                    contains: filters.q,
+                    mode: "insensitive" as const,
+                },
+            }
+            : {}),
+
         ...(filters.range === "all"
             ? {}
             : {

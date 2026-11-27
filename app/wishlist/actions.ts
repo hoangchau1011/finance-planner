@@ -11,8 +11,11 @@ import {
     readWishlistValues,
     wishlistIdSchema,
     wishlistSchema,
+    wishlistSavingsDepositSchema,
+    wishlistSavingsSchema,
     type WishlistFormState,
 } from "@/lib/wishlist-validation";
+
 
 // ==========================================
 // V1.0 - WISHLIST SERVER ACTIONS
@@ -115,25 +118,86 @@ async function saveWishlist(
                     userId,
                 },
             });
+
         } else {
-            // SỬA WISHLIST
-            // Chỉ sửa mục tiêu thuộc tài khoản đang đăng nhập.
-            const result = await prisma.wishlistItem.updateMany({
-                where: {
-                    id: id!,
-                    userId,
-                },
-                data,
-            });
+            // ========================================
+            // SỬA WISHLIST - BẢO VỆ TIỀN TIẾT KIỆM
+            // ========================================
+
+            // Chỉ cho phép cập nhật khi:
+            // 1. Mục tiêu thuộc user hiện tại.
+            // 2. Số tiền đã tiết kiệm không vượt
+            //    quá chi phí mục tiêu mới.
+            //
+            // Điều kiện được kiểm tra trực tiếp
+            // trong UPDATE của PostgreSQL để tránh
+            // xung đột với thao tác Thêm tiền.
+
+            const result =
+                await prisma.wishlistItem.updateMany({
+                    where: {
+                        id: id!,
+                        userId,
+                        savedAmount: {
+                            lte: data.cost,
+                        },
+                    },
+
+                    data: {
+                        name: data.name,
+                        cost: data.cost,
+                        priority: data.priority,
+                    },
+                });
 
             if (result.count !== 1) {
+                // Kiểm tra lý do cập nhật không thành công.
+                const current =
+                    await prisma.wishlistItem.findFirst({
+                        where: {
+                            id: id!,
+                            userId,
+                        },
+
+                        select: {
+                            savedAmount: true,
+                        },
+                    });
+
+                if (!current) {
+                    return {
+                        ok: false,
+                        message: WISHLIST_NOT_FOUND_MESSAGE,
+                        values,
+                    };
+                }
+
+                // Chi phí mới nhỏ hơn tiền đã tiết kiệm.
+                if (current.savedAmount > data.cost) {
+                    return {
+                        ok: false,
+                        message:
+                            "Chi phí mục tiêu không được nhỏ hơn số tiền đã tiết kiệm.",
+
+                        errors: {
+                            cost: [
+                                "Chi phí không được nhỏ hơn số tiền đã tiết kiệm.",
+                            ],
+                        },
+
+                        values,
+                    };
+                }
+
                 return {
                     ok: false,
-                    message: WISHLIST_NOT_FOUND_MESSAGE,
+                    message:
+                        "Mục tiêu vừa thay đổi. Vui lòng thử lại.",
                     values,
                 };
             }
         }
+
     } catch {
         return {
             ok: false,
@@ -230,4 +294,174 @@ export async function deleteWishlist(
         ok: true,
         message: "Đã xóa mục tiêu thành công.",
     };
+}
+
+
+// ==========================================
+// 7. V1.0 - WISHLIST SAVINGS
+// ==========================================
+
+export type WishlistSavingsResult = {
+    ok: boolean;
+    message: string;
+    savedAmount?: number;
+    milestone?: 50 | 75 | 100;
+};
+
+// ==========================================
+// SERVER ACTION - THÊM TIỀN TIẾT KIỆM
+// ==========================================
+
+export async function addWishlistSavings(
+    id: string,
+    formData: FormData
+): Promise<WishlistSavingsResult> {
+    // 1. Kiểm tra tài khoản đăng nhập.
+    const userId = await getAuthenticatedUserId();
+
+    if (!userId) {
+        return {
+            ok: false,
+            message: SESSION_EXPIRED_MESSAGE,
+        };
+    }
+
+    // 2. Kiểm tra ID mục tiêu.
+    const parsedId = wishlistIdSchema.safeParse(id);
+
+    if (!parsedId.success) {
+        return {
+            ok: false,
+            message: "ID mục tiêu không hợp lệ.",
+        };
+    }
+
+    // 3. Kiểm tra số tiền người dùng nhập.
+    const rawAmount = String(
+        formData.get("amount") ?? ""
+    );
+
+    const parsedAmount =
+        wishlistSavingsDepositSchema.safeParse(
+            rawAmount
+        );
+
+    if (!parsedAmount.success) {
+        return {
+            ok: false,
+            message:
+                parsedAmount.error.issues[0]?.message ??
+                "Số tiền tiết kiệm không hợp lệ.",
+        };
+    }
+
+    const deposit = parsedAmount.data;
+
+    try {
+        // 4. Chỉ tìm mục tiêu thuộc user hiện tại.
+        const item = await prisma.wishlistItem.findFirst({
+            where: {
+                id: parsedId.data,
+                userId,
+            },
+
+            select: {
+                cost: true,
+                savedAmount: true,
+            },
+        });
+
+        if (!item) {
+            return {
+                ok: false,
+                message: WISHLIST_NOT_FOUND_MESSAGE,
+            };
+        }
+
+        // 5. Tính tổng số tiền sau khi thêm.
+        const nextSavedAmount =
+            item.savedAmount + deposit;
+
+        // 6. Không cho tiết kiệm vượt mục tiêu.
+        const checked = wishlistSavingsSchema.safeParse({
+            cost: item.cost,
+            savedAmount: nextSavedAmount,
+        });
+
+        if (!checked.success) {
+            return {
+                ok: false,
+                message:
+                    checked.error.issues[0]?.message ??
+                    "Số tiền tiết kiệm không hợp lệ.",
+            };
+        }
+
+        // 7. Cập nhật có kiểm tra dữ liệu cũ.
+        // Nếu mục tiêu vừa bị sửa ở yêu cầu khác,
+        // thao tác sẽ không ghi đè dữ liệu mới.
+        const result =
+            await prisma.wishlistItem.updateMany({
+                where: {
+                    id: parsedId.data,
+                    userId,
+                    cost: item.cost,
+                    savedAmount: item.savedAmount,
+                },
+
+                data: {
+                    savedAmount: {
+                        increment: deposit,
+                    },
+                },
+            });
+
+        if (result.count !== 1) {
+            return {
+                ok: false,
+                message:
+                    "Mục tiêu vừa được cập nhật. Vui lòng tải lại trang và thử lại.",
+            };
+        }
+
+        // 8. Xác định các mốc tiến độ.
+        const beforePercent =
+            (item.savedAmount / item.cost) * 100;
+
+        const afterPercent =
+            (nextSavedAmount / item.cost) * 100;
+
+        const milestones = [50, 75, 100] as const;
+
+        const reachedMilestone = milestones
+            .filter(
+                (milestone) =>
+                    beforePercent < milestone &&
+                    afterPercent >= milestone
+            )
+            .at(-1);
+
+        // 9. Làm mới giao diện.
+        revalidateWishlistPages();
+
+        // 10. Trả kết quả.
+        return {
+            ok: true,
+            savedAmount: nextSavedAmount,
+            milestone: reachedMilestone,
+
+            message:
+                reachedMilestone === 100
+                    ? "Chúc mừng! Bạn đã đạt mục tiêu tiết kiệm."
+                    : reachedMilestone
+                        ? `Bạn đã đạt mốc ${reachedMilestone}% mục tiêu!`
+                        : "Đã ghi nhận tiền tiết kiệm thành công.",
+        };
+    } catch {
+        return {
+            ok: false,
+            message:
+                "Không thể cập nhật tiền tiết kiệm. Vui lòng thử lại.",
+        };
+    }
 }

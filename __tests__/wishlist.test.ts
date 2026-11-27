@@ -12,6 +12,7 @@ import {
 // ==========================================
 
 const mocks = vi.hoisted(() => ({
+    findFirst: vi.fn(),
     requireUser: vi.fn(),
     create: vi.fn(),
     updateMany: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock("@/lib/dal", () => ({
 vi.mock("@/lib/prisma", () => ({
     prisma: {
         wishlistItem: {
+            findFirst: mocks.findFirst,
             create: mocks.create,
             updateMany: mocks.updateMany,
             deleteMany: mocks.deleteMany,
@@ -49,6 +51,7 @@ import {
     createWishlist,
     updateWishlist,
     deleteWishlist,
+    addWishlistSavings,
 } from "@/app/wishlist/actions";
 
 import {
@@ -111,6 +114,8 @@ beforeEach(() => {
     mocks.deleteMany.mockResolvedValue({
         count: 1,
     });
+
+    mocks.findFirst.mockResolvedValue(null);
 });
 
 // ==========================================
@@ -348,6 +353,9 @@ describe("Wishlist - Update", () => {
             where: {
                 id: "wishlist-1",
                 userId: USER_A,
+                savedAmount: {
+                    lte: 18000000,
+                },
             },
             data: {
                 name: "Mua laptop mới",
@@ -375,6 +383,9 @@ describe("Wishlist - Update", () => {
             where: {
                 id: "wishlist-cua-user-b",
                 userId: USER_A,
+                savedAmount: {
+                    lte: 15000000,
+                },
             },
             data: expect.any(Object),
         });
@@ -497,4 +508,188 @@ describe("Wishlist - Delete", () => {
         expect(mocks.revalidatePath)
             .not.toHaveBeenCalled();
     });
+});
+
+// ==========================================
+// V1.0 - WISHLIST SAVINGS TESTS
+// ==========================================
+
+describe("Wishlist - Savings Protection", () => {
+
+    it("Không cho giảm chi phí dưới số tiền đã tiết kiệm", async () => {
+        mocks.updateMany.mockResolvedValueOnce({
+            count: 0,
+        });
+
+        mocks.findFirst.mockResolvedValueOnce({
+            savedAmount: 8000000,
+        });
+
+        const result = await updateWishlist(
+            "wishlist-1",
+            {},
+            makeFormData({
+                cost: "5000000",
+            })
+        );
+
+        expect(result.ok).toBe(false);
+        expect(result.errors?.cost).toBeDefined();
+
+        expect(mocks.updateMany)
+            .toHaveBeenCalledWith({
+                where: {
+                    id: "wishlist-1",
+                    userId: USER_A,
+                    savedAmount: {
+                        lte: 5000000,
+                    },
+                },
+                data: expect.any(Object),
+            });
+
+        expect(mocks.revalidatePath)
+            .not.toHaveBeenCalled();
+    });
+
+    it("Cho phép chi phí mới bằng tiền đã tiết kiệm", async () => {
+        const result = await updateWishlist(
+            "wishlist-1",
+            {},
+            makeFormData({
+                cost: "8000000",
+            })
+        );
+
+        expect(result.ok).toBe(true);
+
+        expect(mocks.updateMany)
+            .toHaveBeenCalledWith({
+                where: {
+                    id: "wishlist-1",
+                    userId: USER_A,
+                    savedAmount: {
+                        lte: 8000000,
+                    },
+                },
+                data: expect.any(Object),
+            });
+    });
+
+    it("Thêm tiền thành công và đạt mốc 50%", async () => {
+        mocks.findFirst.mockResolvedValueOnce({
+            cost: 15000000,
+            savedAmount: 6000000,
+        });
+
+        const formData = new FormData();
+        formData.set("amount", "1500000");
+
+        const result = await addWishlistSavings(
+            "wishlist-1",
+            formData
+        );
+
+        expect(result.ok).toBe(true);
+        expect(result.savedAmount).toBe(7500000);
+        expect(result.milestone).toBe(50);
+
+        expect(mocks.updateMany)
+            .toHaveBeenCalledWith({
+                where: {
+                    id: "wishlist-1",
+                    userId: USER_A,
+                    cost: 15000000,
+                    savedAmount: 6000000,
+                },
+                data: {
+                    savedAmount: {
+                        increment: 1500000,
+                    },
+                },
+            });
+
+        expect(mocks.revalidatePath)
+            .toHaveBeenCalledWith("/wishlist");
+    });
+
+    it("Không cho thêm tiền vượt mục tiêu", async () => {
+        mocks.findFirst.mockResolvedValueOnce({
+            cost: 15000000,
+            savedAmount: 12000000,
+        });
+
+        const formData = new FormData();
+        formData.set("amount", "5000000");
+
+        const result = await addWishlistSavings(
+            "wishlist-1",
+            formData
+        );
+
+        expect(result.ok).toBe(false);
+
+        expect(mocks.updateMany)
+            .not.toHaveBeenCalled();
+    });
+
+    it("Không thêm tiền vào mục tiêu của user khác", async () => {
+        mocks.findFirst.mockResolvedValueOnce(null);
+
+        const formData = new FormData();
+        formData.set("amount", "500000");
+
+        const result = await addWishlistSavings(
+            "wishlist-cua-user-b",
+            formData
+        );
+
+        expect(result.ok).toBe(false);
+
+        expect(mocks.findFirst)
+            .toHaveBeenCalledWith({
+                where: {
+                    id: "wishlist-cua-user-b",
+                    userId: USER_A,
+                },
+                select: {
+                    cost: true,
+                    savedAmount: true,
+                },
+            });
+
+        expect(mocks.updateMany)
+            .not.toHaveBeenCalled();
+    });
+
+    it("Ngăn ghi đè khi mục tiêu vừa được thay đổi", async () => {
+        mocks.findFirst.mockResolvedValueOnce({
+            cost: 15000000,
+            savedAmount: 6000000,
+        });
+
+        // Giả lập một yêu cầu khác vừa cập nhật
+        // mục tiêu, khiến điều kiện UPDATE không khớp.
+        mocks.updateMany.mockResolvedValueOnce({
+            count: 0,
+        });
+
+        const formData = new FormData();
+        formData.set("amount", "1000000");
+
+        const result = await addWishlistSavings(
+            "wishlist-1",
+            formData
+        );
+
+        expect(result.ok).toBe(false);
+
+        expect(result.message).toContain(
+            "vừa được cập nhật"
+        );
+
+        expect(mocks.revalidatePath)
+            .not.toHaveBeenCalled();
+    });
+
 });

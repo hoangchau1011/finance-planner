@@ -1,75 +1,329 @@
-# Finance Planner — PHY10615 (fp1)
 
-Finance Planner là ứng dụng full-stack theo dõi thu, chi và mục tiêu tiết kiệm cá nhân. Mốc **fp1** tập trung vào Prisma 7 + PostgreSQL Neon, tạo dữ liệu mẫu và dashboard **chỉ đọc khi chạy development trên máy local**. Better Auth và phân quyền người dùng thật sẽ được bổ sung ở fp3; chưa dùng fp1 để chứa dữ liệu tài chính thật.
+# Finance Planner v1.0
 
-## Phạm vi đã tạo ở fp1
+**Đồ án cá nhân môn PHY10615 – Phát triển ứng dụng web**  
+Học kỳ 1, năm học 2026–2027.
 
-- Next.js 16.4 App Router, React 19, TypeScript và Tailwind CSS v4 (CSS `@theme`).
-- Prisma 7 dùng `prisma-client` với `output`, `@prisma/adapter-pg`, URL CLI trong `prisma.config.ts`.
-- Model `User`, `Transaction`, `WishlistItem`; 8 giá trị `Category` theo đề.
-- Migration khởi tạo `prisma/migrations/20261120_fp1_init/migration.sql` (cần áp dụng và kiểm chứng bằng Neon của sinh viên).
-- Seed **42 giao dịch** trải trên bốn tháng cùng 3 wishlist, với user demo `demo@phy10615.vn`.
-- Dashboard: số dư, tổng thu/chi, bảng chi tiêu danh mục trong tháng, giao dịch gần đây, tiến độ wishlist.
-- 13 unit test thuần trong Vitest (bộ mẫu tuần 9 + kiểm tra múi giờ Việt Nam).
+Finance Planner là ứng dụng quản lý tài chính cá nhân,
+giúp người dùng theo dõi thu nhập, chi tiêu, lập ngân sách
+và quản lý các mục tiêu tiết kiệm.
 
-## Công nghệ
+Ứng dụng hỗ trợ báo cáo trực quan và mô phỏng những
+kịch bản tài chính để người dùng chủ động lên kế hoạch.
 
-- Node.js **24** (khuyến nghị dùng `nvm use` theo `.nvmrc`).
-- Next.js **16.4.6**, React **19**, TypeScript **5**, Tailwind **4**.
-- Prisma ORM/Client/**adapter-pg 7.10.1**, PostgreSQL trên Neon.
-- Vitest **5**.
-- Better Auth **1.7**, shadcn/ui Radix, Zod **4**, Sonner và Recharts: các giai đoạn sau, chưa cài ở fp1.
+## 1. Liên kết
 
-## Bắt đầu trên máy local
+- GitHub: https://github.com/hoangchau1011/finance-planner
+- Production Vercel: Chưa triển khai
+- Guest Demo: `/demo` (không cần đăng nhập)
+- AI Log: [AI_LOG.md](./AI_LOG.md)
+- Luật dự án: [AGENTS.md](./AGENTS.md)
 
-1. Mở terminal trong thư mục `finance-planner-fp1`, dùng **Node.js 24** (`node -v`).
-2. Cài những package **đã được người dùng phê duyệt** bằng `npm install`. Lần đầu sẽ tạo `package-lock.json`, phải commit lockfile. Sau lần đầu có lockfile, dùng `npm ci`.
-3. Sao chép `.env.example` sang `.env` và thay hai connection string Neon thật. **Không commit `.env`**.
-4. Dùng database phát triển **mới, chưa có schema**. Chạy:
+**Lưu ý:** Tài khoản demo phục vụ chấm bài sẽ được
+cung cấp riêng cho giảng viên sau khi deploy.
+Không công khai mật khẩu trên GitHub.
 
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   npx prisma db seed
-   npm run dev
-   ```
+## 2. Công nghệ
 
-5. Vào `http://localhost:3000/dashboard`. `FP1_LOCAL_PREVIEW=true` chỉ cho phép xem demo trong chế độ development và trên localhost.
+| Thành phần | Công nghệ |
+|---|---|
+| Framework | Next.js 16.4, App Router |
+| Giao diện | React 19, TypeScript 5 |
+| CSS | Tailwind CSS v4 |
+| UI | shadcn/ui, Radix |
+| Database | PostgreSQL trên Neon |
+| ORM | Prisma ORM 7 |
+| Authentication | Better Auth 1.7 |
+| Validation | Zod 4 |
+| Biểu đồ | Recharts |
+| Thông báo | Sonner |
+| Testing | Vitest 5, React Testing Library |
+| CI | GitHub Actions |
+| Hosting | Vercel (chuẩn bị triển khai) |
 
-## Kiểm tra
+## 3. Tính năng cốt lõi
+
+### 3.1. Xác thực và phân quyền
+
+- Đăng ký tài khoản bằng email và mật khẩu.
+- Đăng nhập bằng email và mật khẩu.
+- Đăng nhập bằng GitHub OAuth.
+- Đăng xuất và quản lý session.
+- Bảo vệ dữ liệu theo userId.
+- Chặn truy cập trái phép vào các trang cá nhân.
+
+### 3.2. Quản lý giao dịch
+
+- Thêm, xem, sửa và xóa giao dịch.
+- Phân loại thu nhập và chi tiêu.
+- Quản lý danh mục, ngày, mô tả và số tiền VND.
+- Kiểm tra dữ liệu đầu vào bằng Zod.
+- Hiển thị thông báo bằng Sonner.
+
+### 3.3. Lọc và tìm kiếm
+
+- Lọc theo tháng hoặc toàn bộ thời gian.
+- Lọc theo loại thu nhập/chi tiêu.
+- Lọc theo danh mục.
+- Tìm kiếm giao dịch theo mô tả.
+- Lưu bộ lọc trên URL searchParams.
+- Lọc dữ liệu phía server theo tài khoản.
+
+### 3.4. Dashboard
+
+- Hiển thị số dư hiện tại.
+- Thống kê tổng thu nhập và tổng chi tiêu.
+- Biểu đồ tài chính.
+- Thống kê chi tiêu theo danh mục.
+- Theo dõi Wishlist và ngân sách.
+
+### 3.5. Wishlist
+
+- Thêm, xem, sửa và xóa mục tiêu.
+- Quản lý tên, chi phí và mức ưu tiên.
+- Theo dõi tiến độ tiết kiệm.
+- Thông báo các mốc 50%, 75% và 100%.
+
+## 4. Tính năng mở rộng
+
+### 4.1. Ngân sách theo tháng
+
+- Thiết lập hạn mức theo danh mục.
+- Theo dõi số tiền đã chi và còn lại.
+- Cảnh báo tại ngưỡng 80% và 100%.
+- Hiển thị tiến độ ngân sách trên Dashboard.
+
+### 4.2. Báo cáo tài chính
+
+- Báo cáo thu nhập và chi tiêu.
+- So sánh xu hướng tài chính giữa các tháng.
+- Biểu đồ trực quan bằng Recharts.
+
+### 4.3. Xuất CSV
+
+- Xuất giao dịch sang file CSV.
+- Áp dụng các bộ lọc đang chọn.
+- Giới hạn dữ liệu xuất theo tài khoản.
+- Hỗ trợ nội dung tiếng Việt.
+
+### 4.4. Mô phỏng tài chính
+
+- Chọn mục tiêu tiết kiệm từ Wishlist.
+- Phân tích dòng tiền trong 3 tháng đã hoàn thành.
+- Ước tính khả năng tiết kiệm hằng tháng.
+- Điều chỉnh khoản tiết kiệm dự kiến.
+- So sánh thời gian đạt mục tiêu theo hai kịch bản.
+- Tính khoản tiết kiệm cần thiết theo thời hạn.
+- Hiển thị biểu đồ tích lũy dự kiến.
+- Không ghi các thay đổi mô phỏng vào database.
+
+## 5. Các cải tiến bổ sung
+
+- Ghi nhận savedAmount riêng cho từng Wishlist.
+- Cho phép bổ sung tiền tiết kiệm vào mục tiêu.
+- Ngăn tiết kiệm vượt chi phí mục tiêu.
+- Guest Demo hoạt động không cần đăng nhập.
+- Dữ liệu Guest Demo độc lập với Neon.
+- Giao diện responsive cho desktop và mobile.
+- Dark Mode.
+- Dashboard loading skeleton.
+- Header và Footer theo trạng thái đăng nhập.
+- Trang chủ giới thiệu tính năng và hướng dẫn dùng thử.
+
+## 6. Các trang chính
+
+| Route | Mục đích |
+|---|---|
+| `/` | Trang giới thiệu |
+| `/login` | Đăng nhập |
+| `/register` | Đăng ký |
+| `/dashboard` | Tổng quan tài chính |
+| `/transactions` | Quản lý giao dịch |
+| `/reports` | Báo cáo |
+| `/budgets` | Ngân sách |
+| `/wishlist` | Mục tiêu tiết kiệm |
+| `/simulator` | Mô phỏng tài chính |
+| `/demo` | Guest Demo |
+
+Các trang chứa dữ liệu cá nhân yêu cầu session hợp lệ.
+Trang chủ, đăng nhập, đăng ký và Guest Demo có thể
+truy cập mà không cần đăng nhập.
+
+## 7. Cài đặt trên máy local
+
+### Yêu cầu
+
+- Node.js 24
+- npm
+- PostgreSQL Neon
+- Git
+
+### Cài đặt
+
+Clone repository:
+
+```bash
+git clone https://github.com/hoangchau1011/finance-planner.git
+cd finance-planner
+```
+
+Cài dependencies:
+
+```bash
+npm ci
+```
+
+Sao chép `.env.example` thành `.env` và điền các
+biến môi trường thực tế của máy phát triển.
+
+Tạo Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Áp dụng migration trên database phát triển:
+
+```bash
+npx prisma migrate dev
+```
+
+Chỉ khi cần tạo dữ liệu mẫu trên database phát triển:
+
+```bash
+npx prisma db seed
+```
+
+Chạy ứng dụng:
+
+```bash
+npm run dev
+```
+
+Mở:
+
+http://localhost:3000
+
+**Không chạy seed trên database production nếu chưa
+kiểm tra chính xác dữ liệu sẽ được tạo hoặc cập nhật.**
+
+## 8. Biến môi trường
+
+Các biến chính:
+
+| Biến | Vai trò |
+|---|---|
+| DATABASE_URL | Kết nối PostgreSQL cho ứng dụng |
+| DATABASE_URL_UNPOOLED | Kết nối trực tiếp cho Prisma CLI |
+| BETTER_AUTH_SECRET | Khóa ký session |
+| BETTER_AUTH_URL | URL chính của ứng dụng |
+| GITHUB_CLIENT_ID | GitHub OAuth Client ID |
+| GITHUB_CLIENT_SECRET | GitHub OAuth Client Secret |
+
+Tham khảo `.env.example`.
+
+Không commit `.env`, `.env.local` hoặc bất kỳ
+thông tin bí mật nào.
+
+## 9. Kiểm thử
+
+Kiểm tra ESLint:
 
 ```bash
 npm run lint
+```
+
+Kiểm tra TypeScript:
+
+```bash
 npm run typecheck
+```
+
+Chạy unit test và component test:
+
+```bash
 npx vitest run
+```
+
+Kiểm tra production build:
+
+```bash
 npm run build
 ```
 
-Chỉ đánh dấu kiểm tra thành công sau khi đã chạy trên máy có Node 24, package đã cài và cơ sở dữ liệu Neon thật. Các file trong bộ fp1 được chuẩn bị nhưng **chưa thể xác nhận các lệnh trên đã thành công** trong môi trường tạo hiện tại (không có npm registry/Neon).
+Tại thời điểm chuẩn bị tài liệu (27/11/2026),
+bộ kiểm thử trên máy phát triển đã đạt
+164/164 bài test.
 
-## Bảo mật và giới hạn
+GitHub Actions CI được cấu hình trong:
 
-- `/dashboard` được chặn ở production để không lộ dữ liệu tài khoản demo trước khi có Better Auth. Khi chỉ chạy bằng `npm run dev` từ script đã cung cấp, máy chủ bind vào 127.0.0.1.
-- Demo user **chưa có mật khẩu**. Không ghi mật khẩu demo hoặc production URL giả ở fp1.
-- Seed dùng ID ổn định và `skipDuplicates` nên chạy lại sẽ không tạo bản ghi trùng; dữ liệu ngày được sinh theo tháng tương đối vào lần seed đầu.
-- `getDateRange()` của tuần 9 vẫn giữ để phục vụ test gốc, còn dashboard fp1 dùng `getVietnamMonthRange()` thống nhất theo `Asia/Ho_Chi_Minh`.
-- `prisma/migrations/20261120_fp1_init/migration.sql` là SQL đã soạn theo schema để có điểm khởi đầu; sinh viên cần đối chiếu bằng Prisma trên database phát triển mới trước khi xem như migration đã kiểm chứng.
+`.github/workflows/ci.yml`
 
-## Checklist theo tiến độ
+CI cần được kiểm tra trên GitHub sau khi push.
 
-- [x] Code chuẩn bị cho fp1: schema/migration/seed/dashboard đọc dữ liệu.
-- [ ] `npx prisma migrate dev` và seed chạy thành công trên Neon thật.
-- [ ] Lint, typecheck, unit test và build được xác minh trên máy local.
-- [ ] `fp1` commit và git tag thật đã được tạo.
-- [ ] fp2: CRUD giao dịch, lọc URL và Zod.
-- [ ] fp3: Better Auth email/password + GitHub, `requireUser()`, kiểm tra `userId`.
-- [ ] v1.0: wishlist CRUD, biểu đồ, Sonner, mở rộng, CI, Vercel.
+## 10. Mốc phát triển
 
-## Sản phẩm cuối kỳ (sẽ cập nhật)
+| Mốc | Nội dung |
+|---|---|
+| fp1 | Database, migration, seed, Dashboard |
+| fp2 | CRUD giao dịch, validation, URL filters |
+| fp3 | Better Auth, session, phân quyền |
+| v1.0 | Wishlist, biểu đồ, mở rộng, kiểm thử |
 
-- GitHub repository: `[Tự điền: URL repo]`
-- Production Vercel: `[Tự điền: URL production]`
-- Tài khoản demo email/mật khẩu: `[Tự điền sau fp3, không viết mật khẩu thật lên repo]`
-- Screenshots: `[Tự bổ sung sau khi chụp các màn hình chạy thật]`
+Các tag lịch sử được giữ nguyên, không thay đổi
+ngày tạo hoặc nội dung commit cũ.
 
-Xem nhật ký sử dụng AI ở [AI_LOG.md](./AI_LOG.md). Các quyết định kiến trúc và luật bảo mật ở [AGENTS.md](./AGENTS.md).
+## 11. Bảo mật
+
+- Dữ liệu tài chính được giới hạn theo userId.
+- Các Server Action và Route Handler nghiệp vụ
+  kiểm tra session và quyền sở hữu.
+- Validation được thực hiện phía server.
+- Không đưa database secret ra trình duyệt.
+- Guest Demo chỉ sử dụng dữ liệu mô phỏng.
+- Mô phỏng tài chính chỉ đọc dữ liệu thật;
+  thay đổi kịch bản không tự động ghi vào Neon.
+
+## 12. Giới hạn đã biết
+
+- Mô phỏng tài chính chỉ mang tính ước tính,
+  không tính lạm phát, lãi suất và biến động
+  thu chi tương lai.
+- Giá trị chênh lệch thu trừ chi chỉ là gợi ý,
+  không đồng nghĩa với khoản đã tiết kiệm thật.
+- Tiến độ Wishlist nâng cao dựa trên savedAmount.
+  Cần đối chiếu thêm với công thức dựa trên số dư
+  trong yêu cầu gốc của đề bài.
+- Dữ liệu Guest Demo không được lưu lâu dài.
+- Cần nghiệm thu production và tài khoản demo.
+- Cần xác nhận GitHub Actions CI chạy xanh.
+
+## 13. Ảnh minh họa
+
+Ảnh chụp từ ứng dụng thực tế sẽ được bổ sung
+trước khi nộp bài:
+
+- Trang chủ
+- Dashboard
+- Giao dịch
+- Báo cáo tài chính
+- Ngân sách
+- Wishlist
+- Mô phỏng tài chính
+- Guest Demo
+- Kết quả GitHub Actions CI
+
+## 14. Sử dụng AI
+
+Dự án được thực hiện có sự hỗ trợ của AI.
+
+Quá trình sử dụng AI, kiểm chứng kết quả,
+những lỗi đã phát hiện và các chỉnh sửa
+được ghi trong [AI_LOG.md](./AI_LOG.md).
+
+Quy tắc kỹ thuật và bảo mật được mô tả
+trong [AGENTS.md](./AGENTS.md).
+
+Việc sử dụng AI phải được khai báo trung thực
+theo yêu cầu môn học PHY10615.
+```

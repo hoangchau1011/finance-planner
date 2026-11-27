@@ -132,3 +132,70 @@ export function readWishlistValues(
 export type ValidatedWishlist = z.infer<
     typeof wishlistSchema
 >;
+
+
+// ==========================================
+// V1.0 - WISHLIST SAVINGS VALIDATION
+// ==========================================
+
+const MAX_WISHLIST_AMOUNT = 2_147_483_647;
+
+// 1. Kiểm tra số tiền thêm vào mục tiêu.
+// Người dùng phải thêm ít nhất 1 VND.
+export const wishlistSavingsDepositSchema = z
+    .string()
+    .trim()
+    .regex(/^[1-9]\d*$/, {
+        error: "Số tiền thêm vào phải là số nguyên dương.",
+    })
+    .transform(Number)
+    .pipe(
+        z
+            .number()
+            .int()
+            .min(1, {
+                error: "Số tiền thêm vào phải lớn hơn 0.",
+            })
+            .max(MAX_WISHLIST_AMOUNT, {
+                error: "Số tiền vượt giới hạn lưu trữ.",
+            })
+    );
+
+// 2. Kiểm tra tổng số tiền đã tiết kiệm.
+// Cho phép bằng 0 vì mục tiêu mới chưa có tiền.
+export const wishlistSavedAmountSchema = z
+    .number()
+    .int({
+        error: "Tiền tiết kiệm phải là số nguyên.",
+    })
+    .min(0, {
+        error: "Tiền tiết kiệm không được âm.",
+    })
+    .max(MAX_WISHLIST_AMOUNT, {
+        error: "Tiền tiết kiệm vượt giới hạn lưu trữ.",
+    });
+
+// 3. So sánh tiền tiết kiệm với chi phí mục tiêu.
+export const wishlistSavingsSchema = z
+    .object({
+        cost: z
+            .number()
+            .int()
+            .min(1)
+            .max(MAX_WISHLIST_AMOUNT),
+
+        savedAmount: wishlistSavedAmountSchema,
+    })
+    .refine(
+        (data) => data.savedAmount <= data.cost,
+        {
+            path: ["savedAmount"],
+            message:
+                "Tiền tiết kiệm không được vượt số tiền mục tiêu.",
+        }
+    );
+
+// 4. Kiểu dữ liệu sau khi kiểm tra.
+export type ValidatedWishlistSavings = z.infer<
+    typeof wishlistSavingsSchema
+>;

@@ -6,8 +6,9 @@ import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-
+import { SiteNavigation } from "@/components/site-navigation";
 import "./globals.css";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Finance Planner | Quản lý thu chi",
@@ -29,14 +30,19 @@ export default function RootLayout({
           enableSystem={false}
         >
           {/* HEADER */}
+
+          {/* =====================================
+    V1.0 - RESPONSIVE HEADER
+===================================== */}
           <header className="site-header sticky top-0 z-20 border-b border-line bg-card/95 text-foreground backdrop-blur">
             <nav
               aria-label="Điều hướng chính"
-              className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8"
+              className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-8"
             >
+              {/* LOGO */}
               <Link
                 href="/"
-                className="flex items-center gap-2 font-bold tracking-tight text-foreground"
+                className="flex shrink-0 items-center gap-2 font-bold tracking-tight text-foreground"
               >
                 <span
                   aria-hidden="true"
@@ -44,33 +50,20 @@ export default function RootLayout({
                 >
                   ₫
                 </span>
-                Finance Planner
+
+                <span className="hidden min-[400px]:inline">
+                  Finance Planner
+                </span>
               </Link>
 
-              <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
-                <Link
-                  href="/dashboard"
-                  className="rounded-xl px-3 py-2 font-medium text-foreground hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
-                >
-                  Dashboard
-                </Link>
+              {/* ĐIỀU HƯỚNG VÀ TÀI KHOẢN */}
+              <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 text-sm">
+                <SiteNavigation />
 
-                <Link
-                  href="/transactions"
-                  className="rounded-xl px-3 py-2 font-medium text-foreground hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
-                >
-                  Giao dịch
-                </Link>
-
-                <Link
-                  href="/wishlist"
-                  className="rounded-xl px-3 py-2 font-medium text-foreground transition-colors duration-300 ease-in-out hover:bg-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
-                >
-                  Wishlist
-                </Link>
-
+                {/* GIỮ NGUYÊN BETTER AUTH */}
                 <AuthNav />
 
+                {/* GIỮ NGUYÊN LIGHT / DARK MODE */}
                 <ThemeToggle />
               </div>
             </nav>
@@ -86,10 +79,9 @@ export default function RootLayout({
           {/* NỘI DUNG TRANG */}
           {children}
 
-          {/* FOOTER */}
-          <footer className="border-t border-line py-7 text-center text-sm text-muted-foreground">
-            Finance Planner · PHY10615 · fp3 — Better Auth
-          </footer>
+          {/* V1.0 - FOOTER ĐỒNG BỘ TOÀN WEBSITE */}
+          <SiteFooter />
+
         </ThemeProvider>
       </body>
     </html>

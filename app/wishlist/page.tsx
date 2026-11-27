@@ -66,6 +66,7 @@ export default async function WishlistPage() {
             id: true,
             name: true,
             cost: true,
+            savedAmount: true,
             priority: true,
         },
     });

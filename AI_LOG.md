@@ -71,81 +71,86 @@
 
 ---
 
-## v1.0 — Xây dựng chức năng Wishlist CRUD
+## v1.0 — Xây dựng chức năng Wishlist CRUD, hoàn thiện Finance Planner và phát triển tính năng mở rộng
 
 ### 1. Nhật ký sử dụng AI
 
-| Ngày | Công cụ AI | Công việc | Nội dung yêu cầu | AI hỗ trợ | Việc tôi thực hiện | Kết quả | Trạng thái |
-|---|---|---|---|---|---|---|---|
-| 2026-11-24 | ChatGPT | Lập kế hoạch phát triển v1.0 | Hướng dẫn nâng cấp Finance Planner từ fp3 lên v1.0, ưu tiên chức năng Wishlist CRUD và chia nhỏ theo từng file. | Đề xuất cấu trúc file, trình tự triển khai và các bước kiểm tra. | Tôi thực hiện lần lượt từng file, giữ nguyên những chức năng đã hoàn thành ở fp3. | Xác định phạm vi triển khai Wishlist CRUD và kế hoạch kiểm thử. | Hoàn thành kế hoạch. |
-| 2026-11-24 | ChatGPT | Xây dựng Wishlist Validation | Hướng dẫn tạo `lib/wishlist-validation.ts` bằng Zod 4 để kiểm tra dữ liệu mục tiêu tài chính. | Cung cấp mã nguồn kiểm tra tên, chi phí, mức ưu tiên và ID mục tiêu. | Tôi tạo file, tích hợp mã nguồn, chạy TypeScript và ESLint để kiểm tra. | Hoàn thành kiểm tra dữ liệu đầu vào Wishlist. | Đã kiểm tra. |
-| 2026-11-24 | ChatGPT | Xây dựng Wishlist Server Actions | Hướng dẫn tạo chức năng thêm, sửa, xóa Wishlist và phân quyền bằng Better Auth. | Hỗ trợ xây dựng `app/wishlist/actions.ts`, kiểm tra session và giới hạn truy vấn theo `userId`. | Tôi triển khai mã nguồn, kiểm tra các thao tác Prisma và chạy lệnh kiểm tra dự án. | Hoàn thành các Server Actions cho Wishlist CRUD. | Đã kiểm tra. |
-| 2026-11-24 | ChatGPT | Xây dựng giao diện Wishlist | Hướng dẫn tạo form thêm/sửa, bảng danh sách, xác nhận xóa và trang `/wishlist`. | Cung cấp mã nguồn `wishlist-form.tsx`, `wishlist-table.tsx`, `page.tsx` và hướng dẫn tích hợp Sonner. | Tôi tạo các file, kiểm tra giao diện, thử các chức năng CRUD trên localhost. | Hoàn thành giao diện quản lý Wishlist và kết nối dữ liệu người dùng. | Đã kiểm tra. |
-| 2026-11-24 | ChatGPT | Tích hợp Wishlist vào hệ thống | Hướng dẫn cập nhật Header và Dashboard để truy cập Wishlist và hiển thị các mục tiêu gần nhất. | Đề xuất chỉnh sửa `app/layout.tsx` và `app/dashboard/page.tsx`, bổ sung điều hướng và trạng thái danh sách rỗng. | Tôi chỉnh sửa các thành phần hiện có, kiểm tra điều hướng và chức năng cũ. | Wishlist được tích hợp vào Header và Dashboard. | Đã kiểm tra. |
-| 2026-11-24 | ChatGPT | Thiết lập đăng nhập tài khoản demo | Hướng dẫn sử dụng `demo@phy10615.vn` để kiểm thử dữ liệu mẫu đã seed mà không làm mất dữ liệu. | Giải thích vấn đề tài khoản demo chưa có mật khẩu và cung cấp script tạm thời để thiết lập đăng nhập bằng Better Auth. | Tôi tự chọn mật khẩu, chạy script, đăng nhập và kiểm tra dữ liệu mẫu. | Đăng nhập thành công; xác nhận 45 giao dịch và 4 mục tiêu Wishlist. | Hoàn thành đăng nhập demo. |
-| 2026-11-24 | ChatGPT | Kiểm thử Wishlist CRUD | Hướng dẫn xây dựng bộ kiểm thử bằng Vitest cho validation, thêm, sửa, xóa và phân quyền. | Cung cấp 23 trường hợp kiểm thử trong `__tests__/wishlist.test.ts`, sử dụng mock session và Prisma. | Tôi tạo file kiểm thử, chạy Vitest, TypeScript, ESLint và production build. | Các bước kiểm tra được thực hiện thành công theo kết quả trên máy cá nhân. | Đã kiểm tra. |
-| 2026-11-25 | ChatGPT | Cập nhật tài liệu AGENTS.md | Hướng dẫn cập nhật tài liệu kỹ thuật cho Wishlist CRUD và kiểm tra các file thay đổi trước commit. | Đề xuất nội dung tài liệu và các lệnh `git diff`, `git diff --check`, `git status`. | Tôi cập nhật `AGENTS.md`, kiểm tra Git status và các cảnh báo LF/CRLF. | Không phát hiện lỗi khoảng trắng; các thay đổi v1.0 chưa được commit. | Chưa commit v1.0. |
-| 2026-11-25 | ChatGPT | Cập nhật nhật ký AI_LOG.md | Hướng dẫn tổng hợp nhật ký sử dụng AI và phần tự đánh giá cho phiên bản v1.0 theo cấu trúc tài liệu hiện có. | Soạn nội dung mô tả quá trình thực hiện, công việc AI hỗ trợ, kết quả kiểm thử và các vấn đề đã xử lý. | Tôi rà soát nội dung, yêu cầu bổ sung bảng nhật ký 8 cột để thống nhất với các phiên bản trước. | Bổ sung nhật ký v1.0; chờ duyệt nội dung cuối cùng trước khi commit và push. | Đang hoàn thiện tài liệu. |
+| Ngày | Công cụ | Việc nhờ AI | Prompt (tóm tắt) | Kết quả dùng thế nào | Mình đã kiểm chứng / sửa gì | Commit/PR |
+|---|---|---|---|---|---|---|
+| 25–26/11/2026 | ChatGPT | Phát triển báo cáo tài chính | Hướng dẫn xây dựng trang Reports, phân tích thu chi, biểu đồ và thống kê theo tháng. | Bổ sung trang `/reports`, các hàm tổng hợp dữ liệu và biểu đồ Recharts. | Tạo các file theo hướng dẫn, chạy TypeScript, lint và kiểm thử trong quá trình tích hợp. | Chờ commit v1.0 |
+| 25–26/11/2026 | ChatGPT | Mở rộng quản lý ngân sách | Xây dựng ngân sách theo danh mục từng tháng, cảnh báo 80% và 100%, tích hợp Dashboard. | Bổ sung model `MonthlyBudget`, migration, validation, Server Actions và giao diện `/budgets`. | Thực hiện migration, Prisma generate; kiểm tra thao tác ngân sách và bổ sung 26 unit test. | Chờ commit v1.0 |
+| 26/11/2026 | ChatGPT | Nâng cấp Wishlist Savings | Thêm tiền tiết kiệm riêng cho từng mục tiêu, theo dõi tiến độ và thông báo mốc. | Bổ sung `savedAmount`, migration, form tiết kiệm, kiểm tra quyền sở hữu và giới hạn số tiền. | Kiểm tra lỗi khi cập nhật mục tiêu, sửa điều kiện truy vấn và chạy 29 bài kiểm thử Wishlist. | Chờ commit v1.0 |
+| 26/11/2026 | ChatGPT | Cải tiến Dashboard và giao dịch | Thêm thẻ thống kê, tổng quan ngân sách, tìm kiếm và xuất CSV. | Tạo các component Dashboard, tìm kiếm mô tả giao dịch và Route Handler xuất CSV. | Kiểm tra TypeScript, lint, Vitest và sửa các lỗi tích hợp phát sinh. | Chờ commit v1.0 |
+| 26–27/11/2026 | ChatGPT | Thiết kế lại giao diện trang chủ | Xây dựng landing page chuyên nghiệp, responsive, hỗ trợ Dark Mode và giới thiệu các tính năng. | Cập nhật `app/page.tsx`, tạo các khu vực giới thiệu và Dashboard Preview. | Kiểm tra build, giao diện trên localhost và điều chỉnh các thành phần hiển thị. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Xây dựng Guest Demo | Tạo chế độ dùng thử không cần đăng nhập, sử dụng dữ liệu mô phỏng độc lập với Neon. | Tạo `guest-demo-data.ts` và trang `/demo` với Dashboard, CRUD giao dịch, ngân sách và Wishlist mô phỏng. | Chạy các lệnh kiểm tra; kiểm tra đường dẫn import và xử lý vấn đề hiển thị trong VS Code. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Hoàn thiện Header, Footer và Dark Mode | Thiết kế menu responsive, đồng bộ Footer và tự ẩn mục Khám phá khi đăng nhập. | Bổ sung `SiteNavigation`, `SiteFooter` và kiểm tra session bằng Better Auth. | Kiểm tra giao diện, trạng thái đăng nhập và bổ sung component test. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Xây dựng chức năng Mô phỏng tài chính | Phát triển tính năng dự đoán thời gian đạt mục tiêu Wishlist, điều chỉnh tiết kiệm và so sánh kịch bản. | Tạo `lib/financial-simulator.ts`, giao diện mô phỏng, biểu đồ tích lũy và trang `/simulator`. | Kiểm tra công thức, chạy 26 unit test, typecheck và lint thành công. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Kết nối mô phỏng với Neon | Đọc dữ liệu Wishlist và giao dịch 3 tháng trước theo tài khoản đăng nhập. | Tích hợp `requireUser()`, truy vấn Prisma theo `userId` và truyền dữ liệu vào component mô phỏng. | Khi chưa đăng nhập, phát hiện `UnauthorizedError`; bổ sung xử lý chuyển hướng đến `/login` mà không bỏ kiểm tra quyền. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Kiểm thử tích hợp mô phỏng | Viết test kiểm tra xác thực, phân quyền và dữ liệu truyền vào trang mô phỏng. | Tạo `simulator-page.test.ts` với 9 bài kiểm thử dùng mock. | Phát hiện cấu hình Vitest không nhận `.test.tsx`, đổi thành `.test.ts`; kiểm thử toàn dự án đạt 158/158 bài. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Bổ sung Component Test | Kiểm thử Footer theo trạng thái đăng nhập bằng React Testing Library. | Tạo `site-footer.test.ts` và bổ sung 6 bài component test. | Phát hiện thiếu `jsdom`, bổ sung thư viện kiểm thử; xác nhận các lệnh kiểm tra đạt, tổng cộng 164 bài test. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Thiết lập GitHub Actions CI | Tạo workflow tự động kiểm tra lint, typecheck, test và build khi push hoặc tạo Pull Request. | Tạo `.github/workflows/ci.yml`, dùng PostgreSQL tạm thời cho CI. | Kiểm tra đường dẫn, nội dung file và trạng thái Git. Chưa xác nhận workflow chạy thành công trên GitHub. | Chờ commit v1.0 |
+| 27/11/2026 | ChatGPT | Hoàn thiện tài liệu dự án | Cập nhật README, AGENTS, biến môi trường mẫu và chuẩn bị AI_LOG. | AI hướng dẫn cập nhật tài liệu cho Finance Planner v1.0 và chuẩn bị triển khai Vercel. | Đối chiếu nội dung dự thảo với dự án; cần xác nhận các thay đổi tài liệu đã lưu đầy đủ trước khi commit. | Chờ commit v1.0 |
 
-**Các nội dung AI hỗ trợ:**
+### 2. Những tính năng mở rộng đã thực hiện
 
-- **Phân tích và lập kế hoạch:** AI hỗ trợ chia chức năng Wishlist CRUD thành từng bước, xác định các file cần tạo mới và các file cần chỉnh sửa.
-- **Kiểm tra dữ liệu:** AI hỗ trợ xây dựng `lib/wishlist-validation.ts` bằng Zod 4 để kiểm tra tên mục tiêu, số tiền và mức độ ưu tiên.
-- **Xử lý nghiệp vụ:** AI hướng dẫn xây dựng `app/wishlist/actions.ts` với các Server Actions để thêm, sửa và xóa mục tiêu tài chính.
-- **Xác thực và phân quyền:** AI hỗ trợ tích hợp Better Auth, lấy `userId` từ session và giới hạn các thao tác trên dữ liệu thuộc tài khoản đang đăng nhập.
-- **Xây dựng giao diện:** AI hỗ trợ tạo `wishlist-form.tsx`, `wishlist-table.tsx` và trang `/wishlist`, kết hợp React 19, Tailwind CSS và Sonner.
-- **Tích hợp Dashboard:** AI hướng dẫn bổ sung liên kết Wishlist trên Header, hiển thị các mục tiêu gần nhất và điều hướng đến trang quản lý.
+**Các chức năng mở rộng theo danh sách gợi ý của giảng viên:**
 
+- Quản lý ngân sách theo danh mục và tháng, cảnh báo tại ngưỡng 80% và 100%.
+- Báo cáo phân tích tài chính, so sánh thu nhập và chi tiêu giữa các tháng.
+- Xuất danh sách giao dịch ra CSV theo bộ lọc.
 
-**Quá trình thực hiện:**
+**Các cải tiến và tính năng bổ sung:**
 
-Tôi lần lượt tạo và chỉnh sửa các file theo hướng dẫn, kiểm tra TypeScript và ESLint sau từng bước, sau đó kiểm thử các chức năng trên trình duyệt.
+- Theo dõi tiền tiết kiệm thực tế (`savedAmount`) cho từng mục tiêu Wishlist.
+- Tìm kiếm giao dịch theo mô tả.
+- Mô phỏng tài chính dựa trên dữ liệu giao dịch và Wishlist, dự đoán thời gian đạt mục tiêu theo các kịch bản.
+- Guest Demo cho phép trải nghiệm ứng dụng không cần tài khoản và không ghi dữ liệu thật.
+- Cải tiến Dashboard, trang chủ, Header, Footer, responsive và Dark Mode.
 
-Sau khi hoàn thành Wishlist CRUD, tôi chạy kiểm thử Vitest và kiểm tra production build. Các bước kiểm tra được thực hiện thành công theo kết quả trên máy cá nhân.
+### 3. Các lỗi phát hiện và cách khắc phục
 
-Trong quá trình kiểm thử, tôi sử dụng tài khoản `demo@phy10615.vn` đã được tạo ở phiên bản trước.
+**Lỗi 1 – Truy cập trang mô phỏng khi chưa đăng nhập**
 
-Thiết lập phương thức đăng nhập bằng Better Auth mà không thay đổi dữ liệu đã lưu. Sau khi thực hiện, tôi đăng nhập thành công và xác nhận tài khoản demo có **45 giao dịch và 4 mục tiêu Wishlist**.
+- Hiện tượng: `requireUser()` phát sinh `UnauthorizedError`, làm Next.js hiển thị trang lỗi.
+- Nguyên nhân: Code ban đầu chưa xử lý chuyển hướng khi không có session.
+- Khắc phục: Bắt riêng `UnauthorizedError` và chuyển đến `/login`, vẫn giữ kiểm tra phân quyền phía server.
 
-### 2. Tự đánh giá cuối bài
+**Lỗi 2 – Vitest không tìm thấy file kiểm thử**
 
-**a) Những công việc tôi tự thực hiện**
+- Hiện tượng: `No test files found`.
+- Nguyên nhân: AI đề xuất tên `simulator-page.test.tsx`, trong khi cấu hình Vitest chỉ nhận `*.test.ts`.
+- Khắc phục: Đổi đuôi file thành `.test.ts`, chạy lại và xác nhận kiểm thử đạt.
 
-- Trực tiếp tạo và chỉnh sửa các file mã nguồn trong VS Code.
-- Tổ chức thư mục và tích hợp các thành phần Wishlist vào dự án.
-- Thực hiện các lệnh kiểm tra TypeScript, ESLint, Vitest và production build.
-- Kiểm tra giao diện và các chức năng thêm, sửa, xóa mục tiêu.
-- Đăng nhập tài khoản demo và kiểm tra dữ liệu đã có trong Neon PostgreSQL.
-- Kiểm tra các thay đổi bằng Git và rà soát tài liệu trước khi commit.
+**Lỗi 3 – Thiếu thư viện môi trường kiểm thử**
 
-**b) Những công việc AI hỗ trợ**
+- Hiện tượng: `Cannot find package 'jsdom'`.
+- Nguyên nhân: Component test yêu cầu môi trường DOM giả lập nhưng package chưa được cài.
+- Khắc phục: Bổ sung dependency kiểm thử còn thiếu, sau đó chạy lại Vitest.
 
-- Phân tích yêu cầu và đề xuất cách chia nhỏ chức năng Wishlist CRUD.
-- Cung cấp mã nguồn tham khảo và hướng dẫn chỉnh sửa từng file.
-- Giải thích cách kết hợp Zod 4, React Hooks, Next.js Server Actions và Prisma.
-- Đề xuất cách phân quyền theo tài khoản để tránh truy cập dữ liệu của người dùng khác.
-- Hỗ trợ xây dựng bộ kiểm thử Vitest.
+**Bài học:** Cần kiểm tra mã do AI cung cấp bằng TypeScript, ESLint, Vitest, production build và thử nghiệm thực tế. Không mặc định mọi đề xuất của AI đều hoàn chỉnh.
 
-**c) Lỗi, vấn đề gặp phải và cách khắc phục**
+### 4. Kết quả kiểm thử phiên bản v1.0
 
-- **Tài khoản demo chưa đăng nhập được:** Tài khoản được tạo từ dữ liệu seed nhưng chưa có phương thức đăng nhập bằng mật khẩu. Tôi thực hiện script thiết lập mật khẩu theo hướng dẫn của AI và đăng nhập thành công.
-- **Nguy cơ truy cập dữ liệu giữa các tài khoản:** Các Server Actions được thiết kế để lấy `userId` từ session Better Auth, đồng thời giới hạn truy vấn sửa và xóa theo cả ID mục tiêu và ID người dùng.
-- **Cảnh báo LF/CRLF trên Windows:** Git xuất hiện cảnh báo chuyển đổi ký tự xuống dòng. Tôi sử dụng `git diff --check` để kiểm tra và không phát hiện lỗi khoảng trắng.
-- **Kiểm thử dữ liệu:** Tôi sử dụng tài khoản demo có sẵn dữ liệu để kiểm tra chức năng mà không cần tạo lại toàn bộ giao dịch và mục tiêu mẫu.
+| Hạng mục | Kết quả |
+|---|---|
+| Unit test bộ mô phỏng tài chính | 26 test đạt |
+| Test tích hợp trang mô phỏng | 9 test đạt |
+| Component test Footer | 6 test đạt |
+| Tổng kiểm thử trước khi bổ sung component test | 158/158 |
+| Tổng kiểm thử sau khi bổ sung component test | 164 bài test đạt |
+| TypeScript, ESLint | Đã được kiểm tra đạt trong quá trình phát triển |
+| Production build | Đã chạy thành công trong quá trình phát triển; cần kiểm tra lại bản cuối |
+| GitHub Actions CI | Đã tạo workflow, chưa xác nhận chạy xanh trên GitHub |
+| Vercel production | Chưa xác nhận triển khai |
 
-**d) Kết quả và tự đánh giá**
+*Lưu ý: Các bài test thành phần nằm trong tổng số test toàn dự án, không cộng thêm vào tổng 164.*
 
-Trong phiên bản v1.0, tôi đã hoàn thành các nội dung:
+### 5. Tự đánh giá phiên bản v1.0
 
-- Thêm, sửa và xóa mục tiêu tài chính.
-- Kiểm tra dữ liệu đầu vào bằng Zod 4.
-- Hiển thị danh sách Wishlist và mức độ ưu tiên.
-- Tích hợp Wishlist vào Dashboard và thanh điều hướng.
-- Hiển thị thông báo kết quả và xác nhận trước khi xóa.
-- Giới hạn truy cập dữ liệu theo tài khoản đăng nhập.
-- Xây dựng 23 bài kiểm thử mới cho chức năng Wishlist.
-- Kiểm tra TypeScript, ESLint, Vitest và production build.
+**Phần mình trực tiếp thực hiện:** Tôi tạo và chỉnh sửa các file theo hướng dẫn, cấu hình môi trường phát triển, chạy migration, kiểm tra giao diện trên localhost, thực hiện các lệnh kiểm thử, đọc thông báo lỗi và điều chỉnh code khi phát hiện vấn đề. Tôi kiểm tra trạng thái Git và quyết định việc commit/push sau khi rà soát.
 
-**Các nội dung chưa triển khai:** Biểu đồ tài chính nâng cao bằng shadcn Chart, các tính năng mở rộng, component test và GitHub Actions CI.
+**Phần AI hỗ trợ nhiều nhất:** AI hỗ trợ thiết kế cấu trúc các tính năng mở rộng, cung cấp mã nguồn, xây dựng công thức mô phỏng, tạo giao diện, viết unit test và phân tích lỗi.
 
-**Tự đánh giá:** AI hỗ trợ tôi trong quá trình phân tích, viết mã nguồn tham khảo và thiết kế kiểm thử. Tôi trực tiếp triển khai, chạy chương trình, kiểm tra kết quả và lựa chọn những thay đổi phù hợp với dự án. Qua quá trình thực hiện, tôi hiểu thêm về Server Actions, kiểm tra dữ liệu bằng Zod, quản lý session và bảo vệ dữ liệu theo người dùng.
+**Kiến thức và kinh nghiệm thu được:** Tôi hiểu rõ hơn cách sử dụng Prisma với Neon, xác thực Better Auth, phân quyền theo `userId`, quản lý React state, Server Components, Client Components, mô phỏng dữ liệu bằng hàm thuần và kiểm thử bằng Vitest.
+
+**Một lần AI sai và cách phát hiện:** AI hướng dẫn sử dụng file `.test.tsx` không phù hợp với cấu hình Vitest hiện tại. Tôi phát hiện thông qua Terminal, đổi đuôi file và chạy lại kiểm thử thành công. Điều này cho thấy cần đối chiếu hướng dẫn AI với cấu hình thực tế của dự án.

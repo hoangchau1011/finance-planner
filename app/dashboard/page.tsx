@@ -9,8 +9,29 @@ import {
   CATEGORY_LABELS,
   formatVND,
   getVietnamMonthRange,
-  wishlistProgress,
+
 } from "@/lib/finance";
+
+import {
+  getMonthlyTrend,
+  getCategoryExpenses,
+} from "@/lib/analytics";
+
+import { FinanceCharts } from "@/components/finance-charts";
+
+
+import {
+  DashboardBudgetOverview,
+  type DashboardBudgetItem,
+} from "@/components/dashboard-budget-overview";
+
+import { getVietnamMonthKey } from "@/lib/analytics";
+
+import { BUDGET_CATEGORIES } from "@/lib/budget-validation";
+
+import { DashboardStatCard } from "@/components/dashboard-stat-card";
+
+
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +46,20 @@ function formatDate(value: Date): string {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(value);
 }
+
+
+// ==========================================
+// V1.0 - KIỂM TRA DANH MỤC NGÂN SÁCH
+// ==========================================
+
+function isBudgetCategory(
+  category: string
+): category is DashboardBudgetItem["category"] {
+  return (
+    BUDGET_CATEGORIES as readonly string[]
+  ).includes(category);
+}
+
 
 export default async function DashboardPage() {
 
@@ -45,10 +80,29 @@ export default async function DashboardPage() {
   }
 
 
+
   const userId = user.id;
-  const currentMonth = getVietnamMonthRange();
+
+  // Dùng chung một thời điểm cho Dashboard.
+  const now = new Date();
+
+  // Khoảng thời gian tháng hiện tại theo giờ Việt Nam.
+  const currentMonth = getVietnamMonthRange(now);
+
+  // Mã tháng dùng để truy vấn ngân sách.
+  const budgetMonthKey = getVietnamMonthKey(now);
+
+
+
+  // Ngày đầu tiên của khoảng 6 tháng:
+  // tháng hiện tại và 5 tháng trước.
+  const reportStart = getVietnamMonthRange(
+    now,
+    -5
+  ).gte;
 
   // Truy vấn dữ liệu theo đúng userId
+
   const [
     income,
     expense,
@@ -56,6 +110,7 @@ export default async function DashboardPage() {
     recent,
     wishes,
     count,
+    reportTransactions,
   ] = await Promise.all([
     prisma.transaction.aggregate({
       _sum: { amount: true },
@@ -103,13 +158,46 @@ export default async function DashboardPage() {
         { id: "desc" },
       ],
       take: 4,
+
+      select: {
+        id: true,
+        name: true,
+        cost: true,
+        savedAmount: true,
+        priority: true,
+      },
+
     }),
+
 
 
     prisma.transaction.count({
       where: { userId },
     }),
+
+    // V1.0 - Giao dịch phục vụ biểu đồ 6 tháng.
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        date: {
+          gte: reportStart,
+          lt: currentMonth.lt,
+        },
+      },
+
+      select: {
+        type: true,
+        amount: true,
+        category: true,
+        date: true,
+      },
+
+      orderBy: {
+        date: "asc",
+      },
+    }),
   ]);
+
 
   // Tính số dư từ toàn bộ giao dịch
   const totalIncome = income._sum.amount ?? 0;
@@ -120,6 +208,76 @@ export default async function DashboardPage() {
     (sum, row) => sum + (row._sum.amount ?? 0),
     0,
   );
+
+
+  // ==========================================
+  // V1.0 - DASHBOARD MONTHLY BUDGET
+  // ==========================================
+
+  // 1. Lấy ngân sách của user trong tháng.
+  const monthlyBudgets =
+    await prisma.monthlyBudget.findMany({
+      where: {
+        userId,
+        month: budgetMonthKey,
+      },
+
+      select: {
+        category: true,
+        limitAmount: true,
+      },
+
+      orderBy: {
+        category: "asc",
+      },
+    });
+
+  // 2. Tận dụng dữ liệu EXPENSE đã tổng hợp
+  // trong biến categories ở Dashboard.
+  //
+  // Không cần thực hiện groupBy lần thứ hai.
+  const budgetSpentByCategory = new Map(
+    categories.map((row) => [
+      row.category,
+      row._sum.amount ?? 0,
+    ])
+  );
+
+  // 3. Ghép ngân sách với số tiền đã chi.
+  // Chỉ giữ những danh mục ngân sách hợp lệ.
+  const budgetItems: DashboardBudgetItem[] =
+    monthlyBudgets.flatMap((budget) => {
+      if (!isBudgetCategory(budget.category)) {
+        return [];
+      }
+
+      return [
+        {
+          category: budget.category,
+          limitAmount: budget.limitAmount,
+
+          spentAmount:
+            budgetSpentByCategory.get(
+              budget.category
+            ) ?? 0,
+        },
+      ];
+    });
+
+
+  // Thu nhập và chi tiêu trong 6 tháng.
+  const monthlyTrend = getMonthlyTrend(
+    reportTransactions,
+    now,
+    6
+  );
+
+  // Phân bổ chi tiêu tháng hiện tại.
+  const categoryExpenses = getCategoryExpenses(
+    reportTransactions,
+    now
+  );
+
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-9 sm:px-8 sm:py-12">
@@ -140,61 +298,101 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <Link
-          href="/transactions"
-          className="rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 dark:text-background"
-        >
-          Quản lý giao dịch
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+
+          <Link
+            href="/reports"
+            className="inline-flex items-center justify-center rounded-xl border border-brand/30 bg-card px-5 py-3 text-sm font-semibold text-brand transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted focus-visible:outline-2 focus-visible:outline-brand motion-reduce:transform-none"
+          >
+            Xem báo cáo
+          </Link>
+
+          <Link
+            href="/transactions"
+            className="inline-flex items-center justify-center rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-brand dark:text-background motion-reduce:transform-none"
+          >
+            + Quản lý giao dịch
+          </Link>
+
+        </div>
       </div>
 
       {/* THỐNG KÊ TÀI CHÍNH */}
+
+      {/* =====================================
+    V1.0 - THẺ THỐNG KÊ TÀI CHÍNH
+===================================== */}
       <section
         aria-label="Tổng quan số dư"
-        className="mt-8 grid gap-4 md:grid-cols-3"
+        className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
       >
-        <article className="rounded-2xl border border-brand bg-brand p-6 text-white shadow-lg shadow-black/5 dark:text-background">
-          <p className="text-sm font-medium opacity-85">
-            Số dư hiện tại
-          </p>
+        {/* SỐ DƯ HIỆN TẠI */}
+        <DashboardStatCard
+          title="Số dư hiện tại"
+          value={formatVND(balance)}
+          description="Tổng thu trừ tổng chi"
+          kind="balance"
+          footer="Số dư được tính từ tất cả giao dịch đã ghi nhận."
+        />
 
-          <p className="mt-4 break-words text-3xl font-bold tabular-nums">
-            {formatVND(balance)}
-          </p>
+        {/* TỔNG THU NHẬP */}
+        <DashboardStatCard
+          title="Tổng thu nhập"
+          value={formatVND(totalIncome)}
+          description="Từ các giao dịch INCOME"
+          kind="income"
+          footer="Tổng thu nhập của tài khoản từ trước đến nay."
+        />
 
-          <p className="mt-3 text-xs opacity-85">
-            Tổng thu − Tổng chi
-          </p>
-        </article>
-
-        <article className="rounded-2xl border border-line bg-card p-6 shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground">
-            Tổng thu nhập
-          </p>
-
-          <p className="mt-4 break-words text-2xl font-bold tabular-nums">
-            {formatVND(totalIncome)}
-          </p>
-
-          <p className="mt-3 text-xs text-muted-foreground">
-            Từ giao dịch INCOME
-          </p>
-        </article>
-
-        <article className="rounded-2xl border border-line bg-card p-6 shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground">
-            Tổng chi tiêu
-          </p>
-
-          <p className="mt-4 break-words text-2xl font-bold tabular-nums">
-            {formatVND(totalExpense)}
-          </p>
-
-          <p className="mt-3 text-xs text-muted-foreground">
-            Từ giao dịch EXPENSE
-          </p>
-        </article>
+        {/* TỔNG CHI TIÊU */}
+        <DashboardStatCard
+          title="Tổng chi tiêu"
+          value={formatVND(totalExpense)}
+          description="Từ các giao dịch EXPENSE"
+          kind="expense"
+          footer="Tổng chi tiêu của tài khoản từ trước đến nay."
+        />
       </section>
+
+
+
+      {/* ======================================
+    V1.0 - BIỂU ĐỒ TÀI CHÍNH
+====================================== */}
+      <div className="mt-8 space-y-5">
+
+        {/* HEADER BIỂU ĐỒ */}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              Phân tích tài chính
+            </h2>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              Theo dõi xu hướng thu chi trong 6 tháng
+              và phân bổ chi tiêu của tháng hiện tại.
+            </p>
+          </div>
+
+          <Link
+            href="/reports"
+            className="inline-flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            Báo cáo chi tiết
+            <span aria-hidden="true">→</span>
+          </Link>
+
+        </div>
+
+        {/* BIỂU ĐỒ RECHARTS */}
+        <FinanceCharts
+          monthly={monthlyTrend}
+          categories={categoryExpenses}
+        />
+
+      </div>
+
 
       {/* DANH MỤC VÀ WISHLIST */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -304,8 +502,9 @@ export default async function DashboardPage() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Thanh tỷ lệ bên dưới so sánh số dư hiện tại
-            với chi phí mục tiêu, chỉ mang tính tham khảo.
+            Tiến độ được tính từ số tiền đã dành riêng
+            cho từng mục tiêu, không phụ thuộc vào số dư
+            tài khoản hiện tại.
           </p>
 
 
@@ -341,9 +540,25 @@ export default async function DashboardPage() {
 
 
             {wishes.map((item) => {
-              const progress = wishlistProgress(
-                balance,
-                item.cost,
+
+              // Tiến độ dựa trên tiền thực sự đã tiết kiệm.
+              const progress =
+                item.cost > 0
+                  ? Math.min(
+                    100,
+                    Math.max(
+                      0,
+                      Math.round(
+                        (item.savedAmount / item.cost) * 100
+                      )
+                    )
+                  )
+                  : 0;
+
+              // Số tiền còn thiếu để đạt mục tiêu.
+              const remaining = Math.max(
+                0,
+                item.cost - item.savedAmount
               );
 
               return (
@@ -359,6 +574,29 @@ export default async function DashboardPage() {
                         {" · "}
                         {formatVND(item.cost)}
                       </p>
+
+
+                      {/* TIỀN ĐÃ TIẾT KIỆM */}
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Đã tiết kiệm:{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatVND(item.savedAmount)}
+                        </span>
+                      </p>
+
+                      {/* SỐ TIỀN CÒN THIẾU */}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {remaining === 0 ? (
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            Đã đạt mục tiêu
+                          </span>
+                        ) : (
+                          <>
+                            Còn thiếu: {formatVND(remaining)}
+                          </>
+                        )}
+                      </p>
+
                     </div>
 
                     <strong className="text-sm tabular-nums text-brand">
@@ -385,6 +623,18 @@ export default async function DashboardPage() {
           </div>
         </section>
       </div>
+
+
+      {/* =====================================
+    V1.0 - TỔNG QUAN NGÂN SÁCH
+===================================== */}
+      <div className="mt-6">
+        <DashboardBudgetOverview
+          month={budgetMonthKey}
+          items={budgetItems}
+        />
+      </div>
+
 
       {/* GIAO DỊCH GẦN ĐÂY */}
       <section

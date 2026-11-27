@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { deleteWishlist } from "./actions";
 import { WishlistForm } from "./wishlist-form";
+import { WishlistSavingsForm } from "./savings-form";
 
 import {
     WISHLIST_PRIORITY_LABELS,
@@ -20,6 +21,7 @@ export type WishlistTableRow = {
     id: string;
     name: string;
     cost: number;
+    savedAmount: number;
     priority: "LOW" | "MEDIUM" | "HIGH";
 };
 
@@ -54,6 +56,12 @@ export function WishlistTable({
     const [editingId, setEditingId] = useState<
         string | null
     >(null);
+
+    // Mục tiêu đang mở form thêm tiền tiết kiệm.
+    const [savingId, setSavingId] = useState<
+        string | null
+    >(null);
+
 
     // Mục tiêu đang chờ xác nhận xóa.
     const [confirmDeleteId, setConfirmDeleteId] =
@@ -176,6 +184,8 @@ export function WishlistTable({
                             const isConfirmingDelete =
                                 confirmDeleteId === item.id;
 
+                            const isSaving = savingId === item.id;
+
                             return (
                                 <FragmentRow
                                     key={item.id}
@@ -186,6 +196,7 @@ export function WishlistTable({
                                     }
                                     isDeleting={isPending}
                                     onEdit={() => {
+                                        setSavingId(null);
                                         setConfirmDeleteId(null);
 
                                         setEditingId(
@@ -196,6 +207,7 @@ export function WishlistTable({
                                         setEditingId(null)
                                     }
                                     onRequestDelete={() => {
+                                        setSavingId(null);
                                         setEditingId(null);
                                         setConfirmDeleteId(item.id);
                                     }}
@@ -205,6 +217,19 @@ export function WishlistTable({
                                     onDelete={() =>
                                         handleDelete(item.id)
                                     }
+                                    isSaving={isSaving}
+                                    onToggleSaving={() => {
+                                        setEditingId(null);
+                                        setConfirmDeleteId(null);
+                                        setSavingId(isSaving ? null : item.id);
+                                    }}
+                                    onCancelSaving={() => {
+                                        setSavingId(null);
+                                    }}
+                                    onSavingsSaved={() => {
+                                        setSavingId(null);
+                                    }}
+
                                 />
                             );
                         })}
@@ -231,6 +256,10 @@ type FragmentRowProps = {
     onRequestDelete: () => void;
     onCancelDelete: () => void;
     onDelete: () => void;
+    isSaving: boolean;
+    onToggleSaving: () => void;
+    onCancelSaving: () => void;
+    onSavingsSaved: () => void;
 };
 
 function FragmentRow({
@@ -243,7 +272,23 @@ function FragmentRow({
     onRequestDelete,
     onCancelDelete,
     onDelete,
+    isSaving,
+    onToggleSaving,
+    onCancelSaving,
+    onSavingsSaved,
 }: FragmentRowProps) {
+
+    const savingsPercentage =
+        item.cost > 0
+            ? Math.min(
+                100,
+                Math.max(
+                    0,
+                    (item.savedAmount / item.cost) * 100
+                )
+            )
+            : 0;
+
     return (
         <Fragment>
             {/* DÒNG HIỂN THỊ MỤC TIÊU */}
@@ -254,9 +299,45 @@ function FragmentRow({
                     </span>
                 </td>
 
-                <td className="px-5 py-4 font-semibold text-foreground">
-                    {formatVND(item.cost)}
+
+                <td className="px-5 py-4">
+                    <p className="font-semibold text-foreground">
+                        {formatVND(item.cost)}
+                    </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Đã tiết kiệm: {formatVND(item.savedAmount)}
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-2">
+                        <div
+                            role="progressbar"
+                            aria-label={`Tiến độ tiết kiệm ${item.name}`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.round(savingsPercentage)}
+                            className="h-2 w-28 overflow-hidden rounded-full bg-muted"
+                        >
+                            <div
+                                className="h-full rounded-full bg-brand transition-[width] duration-500"
+                                style={{
+                                    width: `${savingsPercentage}%`,
+                                }}
+                            />
+                        </div>
+
+                        <span className="text-xs font-semibold text-brand">
+                            {Math.round(savingsPercentage)}%
+                        </span>
+                    </div>
+
+                    {item.savedAmount >= item.cost && (
+                        <p className="mt-2 text-xs font-semibold text-emerald-600">
+                            Đã đạt mục tiêu
+                        </p>
+                    )}
                 </td>
+
 
                 <td className="px-5 py-4">
                     <span
@@ -298,7 +379,18 @@ function FragmentRow({
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+
+                            <button
+                                type="button"
+                                onClick={onToggleSaving}
+                                disabled={isDeleting}
+                                aria-label={`Thêm tiền tiết kiệm cho ${item.name}`}
+                                className="rounded-lg border border-brand/30 bg-brand/5 px-3 py-2 font-medium text-brand transition-colors hover:bg-brand/10 disabled:opacity-50"
+                            >
+                                {isSaving ? "Đóng" : "Thêm tiền"}
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={onEdit}
@@ -347,6 +439,31 @@ function FragmentRow({
                     </td>
                 </tr>
             )}
+
+            {/* FORM THÊM TIỀN TIẾT KIỆM */}
+            {isSaving && (
+                <tr>
+                    <td
+                        colSpan={4}
+                        className="bg-muted/30 px-5 py-6"
+                    >
+                        <div className="mx-auto max-w-2xl">
+                            <WishlistSavingsForm
+                                key={`${item.id}-${item.savedAmount}`}
+                                item={{
+                                    id: item.id,
+                                    name: item.name,
+                                    cost: item.cost,
+                                    savedAmount: item.savedAmount,
+                                }}
+                                onCancel={onCancelSaving}
+                                onSaved={onSavingsSaved}
+                            />
+                        </div>
+                    </td>
+                </tr>
+            )}
+
         </Fragment>
     );
 }
