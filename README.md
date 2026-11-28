@@ -308,19 +308,42 @@ ngày tạo hoặc nội dung commit cũ.
 - Dữ liệu Guest Demo không được lưu lâu dài.
 
 ## 13. Ảnh minh họa
-
-Ảnh chụp từ ứng dụng thực tế sẽ được bổ sung
-trước khi nộp bài:
-
 - Trang chủ
+  
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/11f5646d-e9c2-44d5-9484-333f45012589" />
+
 - Dashboard
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a61967db-62e0-4d64-834f-e8885238ee3b" />
+
 - Giao dịch
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/15c33f95-aad8-4a3d-9be7-f2c77959242b" />
+
 - Báo cáo tài chính
+  
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/fefb5c28-d8c8-4cc6-babc-2306a6c039cf" />
+
 - Ngân sách
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/248a13ab-11d6-4c28-94a5-b8712e8bfb31" />
+
 - Wishlist
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a1ea25d2-3e26-4274-a06a-195656d4eb53" />
+
 - Mô phỏng tài chính
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/10a6d35d-3b3c-4190-98cf-ffa35a479c02" />
+
 - Guest Demo
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b129ca66-ebd8-41a7-9a20-11aee7d9cabd" />
+
 - Kết quả GitHub Actions CI
+
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f56aaac5-9232-4002-a30f-d2bf14efc009" />
+
 
 ## 14. Sử dụng AI
 
