@@ -14,7 +14,8 @@ kịch bản tài chính để người dùng chủ động lên kế hoạch.
 ## 1. Liên kết
 
 - GitHub: https://github.com/hoangchau1011/finance-planner
-- Production Vercel: Chưa triển khai
+- Production Vercel: https://finance-planner-beige-pi.vercel.app/
+- Trạng thái: Đã build thành công trên Vercel, đang kiểm thử các chức năng production.
 - Guest Demo: `/demo` (không cần đăng nhập)
 - AI Log: [AI_LOG.md](./AI_LOG.md)
 - Luật dự án: [AGENTS.md](./AGENTS.md)
@@ -39,7 +40,7 @@ Không công khai mật khẩu trên GitHub.
 | Thông báo | Sonner |
 | Testing | Vitest 5, React Testing Library |
 | CI | GitHub Actions |
-| Hosting | Vercel (chuẩn bị triển khai) |
+| Hosting | Vercel |
 
 ## 3. Tính năng cốt lõi
 
@@ -259,7 +260,17 @@ GitHub Actions CI được cấu hình trong:
 
 `.github/workflows/ci.yml`
 
-CI cần được kiểm tra trên GitHub sau khi push.
+
+GitHub Actions CI đã chạy thành công trên nhánh `main`.
+
+- Workflow: `Finance Planner CI`
+- Commit: `0699eb8`
+- Ngày kiểm tra: 27/11/2026
+- Kết quả: Success
+- Nội dung kiểm tra: ESLint, TypeScript, Vitest và Production Build.
+
+[Xem kết quả GitHub Actions](https://github.com/hoangchau1011/finance-planner/actions)
+
 
 ## 10. Mốc phát triển
 
@@ -295,8 +306,6 @@ ngày tạo hoặc nội dung commit cũ.
   Cần đối chiếu thêm với công thức dựa trên số dư
   trong yêu cầu gốc của đề bài.
 - Dữ liệu Guest Demo không được lưu lâu dài.
-- Cần nghiệm thu production và tài khoản demo.
-- Cần xác nhận GitHub Actions CI chạy xanh.
 
 ## 13. Ảnh minh họa
 

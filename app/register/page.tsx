@@ -90,15 +90,16 @@ export default function RegisterPage() {
                         </div>
 
                         <p className="text-sm text-slate-600 dark:text-slate-300">
-                            Tài khoản đã được tạo. Chức năng đăng nhập
-                            sẽ được bổ sung ở bước tiếp theo.
+                            Tài khoản đã được tạo thành công!
+                            Hãy đăng nhập để bắt đầu quản lý tài chính
+                            với Finance Planner.
                         </p>
 
                         <Link
-                            href="/"
-                            className="inline-block text-sm font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                            href="/login"
+                            className="inline-block rounded-lg bg-cyan-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
                         >
-                            Quay về trang chủ
+                            Đăng nhập ngay
                         </Link>
                     </div>
                 ) : (
@@ -208,11 +209,15 @@ export default function RegisterPage() {
                                 : "Đăng ký"}
                         </button>
 
-                        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+
+                        <p className="mt-6 text-center text-sm text-muted-foreground">
                             Đã có tài khoản?{" "}
-                            <span className="font-medium text-cyan-600 dark:text-cyan-400">
-                                Trang đăng nhập sắp được bổ sung
-                            </span>
+                            <Link
+                                href="/login"
+                                className="font-semibold text-brand hover:underline"
+                            >
+                                Đăng nhập ngay
+                            </Link>
                         </p>
                     </form>
                 )}
